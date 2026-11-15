@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Helvetic Dynamics — Propulsion</title>
+<meta name="description" content="Helvetic Dynamics, association suisse de propulsion et de technologies spatiales. Développement d'un moteur-fusée bi-liquide éthanol / oxygène gazeux.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Hanken+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="nav" id="top">
+  <div class="wrap nav__inner">
+    <a class="brand" href="#top" aria-label="Helvetic Dynamics, retour en haut">
+      <img class="logo brand__mark" src="assets/logo.png" alt="" width="326" height="200">
+      <span>Helvetic<br>Dynamics</span>
+    </a>
+    <nav aria-label="Navigation principale">
+      <ul class="nav__links">
+        <li><a href="#mission">Mission</a></li>
+        <li><a href="#moteur">Moteur</a></li>
+        <li><a href="#parcours">Parcours</a></li>
+        <li><a href="#contact" class="nav__cta">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="altimeter" aria-hidden="true"><span class="altimeter__k">Alt.</span><span class="altimeter__v" id="alt">404 m</span></div>
+
+<main>
+  <!-- ============ ACCUEIL : sommet, courbes de niveau ============ -->
+  <section class="hero" aria-labelledby="hero-title">
+    <canvas class="topo" id="topo-hero" aria-hidden="true"></canvas>
+    <div class="grid-ticks" aria-hidden="true">
+      <span class="tk tk--n">N 1 152 500</span>
+      <span class="tk tk--e">E 2 533 100</span>
+      <span class="tk tk--s">CH1903+ / LV95</span>
+    </div>
+    <div class="wrap hero__content">
+      <p class="label">Association · Propulsion &amp; technologies spatiales</p>
+      <h1 id="hero-title">Helvetic<br>Dynamics</h1>
+      <p class="lead">Nous concevons, fabriquons et testons des systèmes de propulsion. Notre premier programme&nbsp;: un moteur-fusée bi-liquide alimenté à l'éthanol et à l'oxygène gazeux.</p>
+      <div class="hero__actions">
+        <a class="btn btn--solid" href="#moteur">Voir le moteur</a>
+        <a class="btn btn--ghost" href="#contact">Nous rejoindre</a>
+      </div>
+    </div>
+    <dl class="hero__readout wrap" aria-label="Repère géographique">
+      <div><dt>Lat.</dt><dd>46°31′08″ N</dd></div>
+      <div><dt>Long.</dt><dd>6°33′58″ E</dd></div>
+      <div><dt>Alt.</dt><dd>404 m</dd></div>
+    </dl>
+  </section>
+
+  <!-- ============ MISSION ============ -->
+  <section class="section" id="mission" aria-labelledby="mission-title">
+    <div class="wrap split">
+      <div class="split__head">
+        <p class="label">01 — Mission</p>
+        <h2 id="mission-title">Monter étape par étape, avec méthode.</h2>
+      </div>
+      <div class="split__body">
+        <p>Helvetic Dynamics réunit des passionnés de fusées et d'ingénierie. Nous partons de l'astromodélisme de haut niveau pour aller vers la propulsion liquide.</p>
+        <p>Comme sur une course en montagne, chaque palier se prépare : conception, calcul, essais au sol, puis validation en vol. On ne passe au suivant que quand le précédent est maîtrisé.</p>
+      </div>
+    </div>
+
+    <div class="wrap domains">
+      <article class="domain">
+        <span class="domain__alt">Palier 1</span>
+        <h3>Propulsion liquide</h3>
+        <p>Injecteurs, chambres de combustion et tuyères. Dimensionnement thermique et choix des matériaux.</p>
+      </article>
+      <article class="domain">
+        <span class="domain__alt">Palier 2</span>
+        <h3>Fusées expérimentales</h3>
+        <p>Conception et vol de fusées certifiées. Structure, aérodynamique, récupération et données de vol.</p>
+      </article>
+      <article class="domain">
+        <span class="domain__alt">Palier 3</span>
+        <h3>Systèmes &amp; électronique</h3>
+        <p>Banc d'essai instrumenté, acquisition de pression et de poussée, séquenceurs de mise à feu.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ DESCENTE : du blanc au noir ============ -->
+  <section class="descent" aria-hidden="true">
+    <canvas class="topo" id="topo-descent"></canvas>
+    <div class="wrap descent__inner">
+      <div class="descent__scale">
+        <span>1 km</span><span>12 km <i>· avions de ligne</i></span><span>40 km <i>· ballons-sondes</i></span><span>80 km <i>· mésosphère</i></span><span>100 km <i>· ligne de Kármán</i></span>
+      </div>
+      <p class="descent__line"><span>Toujours plus haut,</span><span>jusqu'à l'espace.</span></p>
+    </div>
+  </section>
+
+  <!-- ============ MOTEUR ============ -->
+  <section class="section section--dark" id="moteur" aria-labelledby="moteur-title">
+    <div class="wrap">
+      <div class="section__head">
+        <p class="label">02 — Programme en cours</p>
+        <h2 id="moteur-title">Moteur bi-liquide éthanol / GOX</h2>
+        <p class="lead">L'éthanol est injecté au centre, l'oxygène tout autour. Ils se mélangent et brûlent dans une chambre en cuivre protégée par un fin film d'éthanol, puis les gaz accélèrent à travers le col de la tuyère.</p>
+      </div>
+
+      <div class="engine">
+        <figure class="engine__viz">
+          <ol class="engine__phases" aria-hidden="true">
+            <li data-phase="0">Injection</li>
+            <li data-phase="1">Allumage</li>
+            <li data-phase="2">Régime établi</li>
+          </ol>
+          <canvas id="engine-canvas" role="img" aria-label="Animation en coupe du moteur. L'éthanol arrive par le centre de l'injecteur, l'oxygène gazeux par l'anneau qui l'entoure. Les deux se mélangent et brûlent dans la chambre en cuivre. Les gaz accélèrent dans le col puis sortent de la tuyère en formant des diamants de choc."></canvas>
+          <figcaption class="engine__legend">
+            <span class="lg lg--eth">Éthanol</span>
+            <span class="lg lg--gox">Oxygène gazeux</span>
+            <span class="lg lg--film">Film de refroidissement</span>
+            <span class="lg lg--flame">Combustion</span>
+            <button type="button" class="engine__replay" id="engine-replay">Rejouer l'allumage</button>
+          </figcaption>
+        </figure>
+
+        <!-- Modifie les valeurs ci-dessous au fur et à mesure de l'avancement -->
+        <dl class="specs">
+          <div><dt>Combustible</dt><dd>Éthanol (C₂H₅OH)</dd></div>
+          <div><dt>Comburant</dt><dd>Oxygène gazeux (GOX)</dd></div>
+          <div><dt>Injecteur</dt><dd>Coaxial</dd></div>
+          <div><dt>Chambre</dt><dd>Cuivre</dd></div>
+          <div><dt>Refroidissement</dt><dd>Film d'éthanol</dd></div>
+          <div><dt>Rapport O/F</dt><dd class="num">1,2</dd></div>
+          <div><dt>Statut</dt><dd><span class="pill">Conception</span></dd></div>
+          <div><dt>Prochaine étape</dt><dd>Essais au banc</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PARCOURS ============ -->
+  <section class="section section--dark" id="parcours" aria-labelledby="parcours-title">
+    <canvas class="topo topo--faint" id="topo-dark" aria-hidden="true"></canvas>
+    <div class="wrap">
+      <div class="section__head">
+        <p class="label">03 — Itinéraire</p>
+        <h2 id="parcours-title">De la fusée certifiée au moteur liquide.</h2>
+      </div>
+      <ol class="route">
+        <li class="is-done"><span class="route__km">Étape 1 · Validé</span><h3>Certification Niveau 1</h3><p>Premier vol certifié avec moteur haute puissance. Conception, construction et récupération.</p></li>
+        <li class="is-done"><span class="route__km">Étape 2 · Validé</span><h3>Certification Niveau 2</h3><p>Moteur de classe supérieure et examen théorique. Récupération à double déploiement.</p></li>
+        <li class="is-current"><span class="route__km">Étape 3 · En cours</span><h3>Moteur éthanol / GOX</h3><p>Dimensionnement de la chambre et de la tuyère, conception de l'injecteur et de l'alimentation.</p></li>
+        <li><span class="route__km">Étape 4 · À venir</span><h3>Essais au banc</h3><p>Mises à feu instrumentées au sol : pression chambre, poussée et durée de combustion.</p></li>
+        <li><span class="route__km">Étape 5 · Objectif</span><h3>Vol propulsé liquide</h3><p>Intégration du moteur dans un véhicule et premier vol propulsé par ergols liquides.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section class="section section--dark contact" id="contact" aria-labelledby="contact-title">
+    <div class="wrap contact__inner">
+      <img class="logo logo--inv contact__mark" src="assets/logo.png" alt="" width="326" height="200">
+      <h2 id="contact-title">Rejoindre l'aventure, devenir partenaire&nbsp;?</h2>
+      <p class="lead">Écrivez-nous. Nous répondons à toutes les demandes.</p>
+      <!-- Remplace l'adresse ci-dessous si l'association a une nouvelle adresse e-mail (2 endroits) -->
+      <a class="contact__mail" href="mailto:contact.polaris.industries.1@gmail.com">contact.polaris.industries.1@gmail.com</a>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <span class="brand brand--small"><img class="logo logo--inv brand__mark" src="assets/logo.png" alt="" width="326" height="200"><span>Helvetic Dynamics</span></span>
+    <span>© <span id="year">2026</span> Helvetic Dynamics · Association de propulsion</span>
+    <a class="footer__ig" href="https://www.instagram.com/helvetic_dynamics/" target="_blank" rel="noopener" aria-label="Instagram de Helvetic Dynamics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg></a>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script src="engine.js"></script>
+</body>
+</html>
