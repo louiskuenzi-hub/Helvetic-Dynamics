@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="no-js">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -22,6 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Hanken+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<script>document.documentElement.className="js"</script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -85,21 +86,80 @@
       </div>
     </div>
 
-    <div class="wrap domains">
-      <article class="domain">
-        <span class="domain__alt">Palier 1</span>
-        <h3>Propulsion liquide</h3>
-        <p>Injecteurs, chambres de combustion et tuyères. Dimensionnement thermique et choix des matériaux.</p>
+    <div class="wrap stages">
+      <article class="stage">
+        <div class="stage__txt">
+          <span class="domain__alt">Palier 1</span>
+          <h3>Propulsion liquide</h3>
+          <p>Injecteurs, chambres de combustion et tuyères. Dimensionnement thermique et choix des matériaux.</p>
+          <ul><li>Injecteurs</li><li>Chambres de combustion</li><li>Tuyères</li><li>Thermique et matériaux</li></ul>
+        </div>
+        <figure class="plate">
+          <svg viewBox="0 0 640 340" role="img" aria-label="Coupe schématique du moteur : injecteur à gauche, chambre de combustion, col puis tuyère à droite.">
+            <defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="currentColor" stroke-width="1" opacity=".35"/></pattern></defs>
+            <path class="f" fill="url(#hatch)" stroke="none" d="M150 80H594V140L564 147.5 495 107H150ZM150 260H594V200L564 192.5 495 233H150Z"/>
+            <path class="f dash" d="M60 170H632"/>
+            <path class="d" pathLength="1" d="M60 50H150V290H60Z"/>
+            <path class="d" pathLength="1" d="M60 164H150M60 176H150M108 50V150M120 50V150M108 290V190M120 290V190"/>
+            <path class="d" pathLength="1" d="M150 80H594V140L564 147.5 495 107H150"/>
+            <path class="d" pathLength="1" d="M150 260H594V200L564 192.5 495 233H150"/>
+            <path class="d r" pathLength="1" d="M20 170H54M46 165l8 5-8 5M114 20V44M109 36l5 8 5-8M598 142L634 130M598 198L634 210M604 170H634"/>
+            <g class="f"><path class="thin" d="M105 290V302M322 80V66M564 260V288M594 80V66"/>
+              <text x="14" y="156">Éthanol</text><text x="126" y="30">Oxygène</text>
+              <text x="105" y="318" text-anchor="middle">Injecteur</text><text x="322" y="58" text-anchor="middle">Chambre de combustion</text>
+              <text x="564" y="304" text-anchor="middle">Col</text><text x="594" y="58" text-anchor="middle">Tuyère</text></g>
+          </svg>
+          <figcaption>Coupe du moteur, schéma de principe</figcaption>
+        </figure>
       </article>
-      <article class="domain">
-        <span class="domain__alt">Palier 2</span>
-        <h3>Fusées expérimentales</h3>
-        <p>Conception et vol de fusées certifiées. Structure, aérodynamique, récupération et données de vol.</p>
+
+      <article class="stage">
+        <div class="stage__txt">
+          <span class="domain__alt">Palier 2</span>
+          <h3>Fusées expérimentales</h3>
+          <p>Conception et vol de fusées certifiées. Structure, aérodynamique, récupération et données de vol.</p>
+          <ul><li>Structure</li><li>Aérodynamique</li><li>Récupération</li><li>Données de vol</li></ul>
+        </div>
+        <figure class="plate">
+          <svg viewBox="0 0 640 340" role="img" aria-label="Profil de vol : décollage, montée jusqu'à l'apogée, descente sous parachute de freinage, ouverture du parachute principal puis récupération.">
+            <path class="f thin" d="M40 300V36M34 250h6M34 200h6M34 150h6M34 100h6M34 50h6"/>
+            <path class="d" pathLength="1" d="M30 300H612"/>
+            <path class="d r" pathLength="1" d="M110 300Q170 60 300 50"/>
+            <path class="f dash" d="M300 50Q380 80 430 210L540 300"/>
+            <g class="f">
+              <path fill="currentColor" stroke="none" transform="translate(169 145) rotate(31)" d="M0-22C5-14 6-8 6 0V16L11 24H-11L-6 16V0C-6-8-5-14 0-22Z"/>
+              <path transform="translate(366 84)" d="M-9 0A9 9 0 0 1 9 0ZM-9 0L6 20M9 0L6 20"/>
+              <path transform="translate(482 232)" d="M-17 0A17 17 0 0 1 17 0ZM-17 0L3 27M17 0L3 27M0 0L3 27"/>
+              <circle cx="110" cy="300" r="4" fill="currentColor"/><circle cx="540" cy="300" r="4" fill="currentColor"/><circle cx="430" cy="210" r="4" fill="currentColor"/>
+              <path class="mk" d="M300 42l8 8-8 8-8-8Z"/>
+              <text x="110" y="324" text-anchor="middle">Décollage</text><text x="300" y="30" text-anchor="middle">Apogée</text>
+              <text x="384" y="76">Parachute de freinage</text><text x="446" y="200">Parachute principal</text>
+              <text x="540" y="324" text-anchor="middle">Récupération</text></g>
+          </svg>
+          <figcaption>Vol à double déploiement, schéma de principe</figcaption>
+        </figure>
       </article>
-      <article class="domain">
-        <span class="domain__alt">Palier 3</span>
-        <h3>Systèmes &amp; électronique</h3>
-        <p>Banc d'essai instrumenté, acquisition de pression et de poussée, séquenceurs de mise à feu.</p>
+
+      <article class="stage">
+        <div class="stage__txt">
+          <span class="domain__alt">Palier 3</span>
+          <h3>Systèmes &amp; électronique</h3>
+          <p>Banc d'essai instrumenté, acquisition de pression et de poussée, séquenceurs de mise à feu.</p>
+          <ul><li>Banc d'essai instrumenté</li><li>Pression et poussée</li><li>Séquenceurs de mise à feu</li></ul>
+        </div>
+        <figure class="plate">
+          <svg viewBox="0 0 640 340" role="img" aria-label="Allure d'un essai au banc : la pression chambre et la poussée montent à l'allumage, se stabilisent, puis retombent à l'extinction.">
+            <path class="f thin" d="M50 90H610M50 140H610M50 190H610M50 240H610"/>
+            <path class="f dash" d="M170 44V290M470 44V290"/>
+            <path class="d" pathLength="1" d="M50 40V290H610"/>
+            <path class="d" pathLength="1" d="M50 280H165L172 120 180 80 190 100 200 88 215 96 230 90 250 95 270 89 290 94 310 90 330 95 350 90 370 94 390 91 410 95 430 90 450 94 468 91 476 200 490 262 520 278H610"/>
+            <path class="d r" pathLength="1" d="M50 284H168L176 170 186 138 196 154 210 146 230 150 250 145 270 150 290 146 310 150 330 146 350 150 370 146 390 150 410 146 430 150 450 146 468 149 478 230 494 270 524 282H610"/>
+            <g class="f"><text x="170" y="32" text-anchor="middle">Allumage</text><text x="470" y="32" text-anchor="middle">Extinction</text>
+              <text x="320" y="74" text-anchor="middle">Pression chambre</text><text class="rt" x="320" y="174" text-anchor="middle">Poussée</text>
+              <text x="610" y="312" text-anchor="end">Temps</text></g>
+          </svg>
+          <figcaption>Allure d'un essai au banc, tracé illustratif</figcaption>
+        </figure>
       </article>
     </div>
   </section>
@@ -130,41 +190,46 @@
   <!-- ============ MOTEUR ============ -->
   <section class="section section--dark" id="moteur" aria-labelledby="moteur-title">
     <div class="wrap">
-      <div class="section__head">
-        <p class="label">Programme en cours</p>
-        <h2 id="moteur-title">Moteur bi-liquide éthanol / GOX</h2>
+      <div class="section__head engine__head">
+        <div><p class="label">Programme en cours</p>
+        <h2 id="moteur-title">Moteur bi-liquide éthanol / GOX</h2></div>
         <p class="lead">L'éthanol est injecté au centre, l'oxygène tout autour. Ils se mélangent et brûlent dans une chambre en cuivre protégée par un fin film d'éthanol, puis les gaz accélèrent à travers le col de la tuyère.</p>
       </div>
+    </div>
 
-      <div class="engine">
-        <figure class="engine__viz">
-          <ol class="engine__phases" aria-hidden="true">
-            <li data-phase="0">Injection</li>
-            <li data-phase="1">Allumage</li>
-            <li data-phase="2">Régime établi</li>
-          </ol>
-          <canvas id="engine-canvas" role="img" aria-label="Animation en coupe du moteur. L'éthanol arrive par le centre de l'injecteur, l'oxygène gazeux par l'anneau qui l'entoure. Les deux se mélangent et brûlent dans la chambre en cuivre. Les gaz accélèrent dans le col puis sortent de la tuyère en formant des diamants de choc."></canvas>
-          <figcaption class="engine__legend">
-            <span class="lg lg--eth">Éthanol</span>
-            <span class="lg lg--gox">Oxygène gazeux</span>
-            <span class="lg lg--film">Film de refroidissement</span>
-            <span class="lg lg--flame">Combustion</span>
-            <button type="button" class="engine__replay" id="engine-replay">Rejouer l'allumage</button>
-          </figcaption>
-        </figure>
-
-        <!-- Modifie les valeurs ci-dessous au fur et à mesure de l'avancement -->
-        <dl class="specs">
-          <div><dt>Combustible</dt><dd>Éthanol (C₂H₅OH)</dd></div>
-          <div><dt>Comburant</dt><dd>Oxygène gazeux (GOX)</dd></div>
-          <div><dt>Injecteur</dt><dd>Coaxial</dd></div>
-          <div><dt>Chambre</dt><dd>Cuivre</dd></div>
-          <div><dt>Refroidissement</dt><dd>Film d'éthanol</dd></div>
-          <div><dt>Rapport O/F</dt><dd class="num">1,2</dd></div>
-          <div><dt>Statut</dt><dd><span class="pill">Conception</span></dd></div>
-          <div><dt>Prochaine étape</dt><dd>Essais au banc</dd></div>
-        </dl>
+    <!-- Séquence d'allumage : compte à rebours, ouverture des vannes, allumage, régime établi -->
+    <figure class="engine__viz" id="engine-viz">
+      <div class="engine__glow" aria-hidden="true"></div>
+      <div class="wrap engine__hud" aria-hidden="true">
+        <ol class="engine__phases">
+          <li data-phase="0">Injection</li>
+          <li data-phase="1">Allumage</li>
+          <li data-phase="2">Régime établi</li>
+        </ol>
+        <p class="engine__clock" id="engine-clock">T − 3,0 s</p>
       </div>
+      <canvas id="engine-canvas" role="img" aria-label="Animation en coupe du moteur. L'éthanol arrive par le centre de l'injecteur, l'oxygène gazeux par l'anneau qui l'entoure. Les deux se mélangent et brûlent dans la chambre en cuivre. Les gaz accélèrent dans le col puis sortent de la tuyère en formant des diamants de choc."></canvas>
+      <figcaption class="wrap engine__legend">
+        <span class="lg lg--eth">Éthanol</span>
+        <span class="lg lg--gox">Oxygène gazeux</span>
+        <span class="lg lg--film">Film de refroidissement</span>
+        <span class="lg lg--flame">Combustion</span>
+        <button type="button" class="engine__replay" id="engine-replay">Relancer la séquence</button>
+      </figcaption>
+    </figure>
+
+    <div class="wrap">
+    <!-- Modifie les valeurs ci-dessous au fur et à mesure de l'avancement -->
+    <dl class="specs">
+      <div><dt>Combustible</dt><dd>Éthanol (C₂H₅OH)</dd></div>
+      <div><dt>Comburant</dt><dd>Oxygène gazeux (GOX)</dd></div>
+      <div><dt>Injecteur</dt><dd>Coaxial</dd></div>
+      <div><dt>Chambre</dt><dd>Cuivre</dd></div>
+      <div><dt>Refroidissement</dt><dd>Film d'éthanol</dd></div>
+      <div><dt>Rapport O/F</dt><dd class="num">1,2</dd></div>
+      <div><dt>Statut</dt><dd><span class="pill">Conception</span></dd></div>
+      <div><dt>Prochaine étape</dt><dd>Essais au banc</dd></div>
+    </dl>
     </div>
   </section>
 
@@ -176,6 +241,13 @@
         <p class="label">Itinéraire</p>
         <h2 id="parcours-title">De la fusée certifiée au moteur liquide.</h2>
       </div>
+      <svg class="route__profile" aria-hidden="true" height="230">
+        <line class="drop" x1="0%" y1="196" x2="0%" y2="230"/><line class="drop" x1="20%" y1="156" x2="20%" y2="230"/><line class="drop" x1="40%" y1="112" x2="40%" y2="230"/><line class="drop" x1="60%" y1="66" x2="60%" y2="230"/><line class="drop" x1="80%" y1="22" x2="80%" y2="230"/>
+        <line class="done" x1="0%" y1="196" x2="20%" y2="156"/><line class="done" x1="20%" y1="156" x2="40%" y2="112"/>
+        <line class="todo" x1="40%" y1="112" x2="60%" y2="66"/><line class="todo" x1="60%" y1="66" x2="80%" y2="22"/><line class="todo" x1="80%" y1="22" x2="100%" y2="92"/>
+        <rect class="node is-done" x="0%" y="196" width="11" height="11"/><rect class="node is-done" x="20%" y="156" width="11" height="11"/>
+        <rect class="node is-current" x="40%" y="112" width="11" height="11"/><rect class="node" x="60%" y="66" width="11" height="11"/><rect class="node" x="80%" y="22" width="11" height="11"/>
+      </svg>
       <ol class="route">
         <li class="is-done"><span class="route__km">Étape 1 · Validé</span><h3>Certification Niveau 1</h3><p>Premier vol certifié avec moteur haute puissance. Conception, construction et récupération.</p></li>
         <li class="is-done"><span class="route__km">Étape 2 · Validé</span><h3>Certification Niveau 2</h3><p>Moteur de classe supérieure et examen théorique. Récupération à double déploiement.</p></li>

@@ -231,5 +231,12 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
   window.addEventListener('resize', function () { if (window.innerWidth > 760) setMenu(false); });
 
+  /* ---------- planches techniques : le dessin se trace à l'arrivée à l'écran ---------- */
+  var plates = [].slice.call(document.querySelectorAll('.plate'));
+  if ('IntersectionObserver' in window) {
+    var pio = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-in'); pio.unobserve(e.target); } }); }, { threshold: 0.35 });
+    plates.forEach(function (p) { pio.observe(p); });
+  } else plates.forEach(function (p) { p.classList.add('is-in'); });
+
   document.getElementById('year').textContent = new Date().getFullYear();
 })();

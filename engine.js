@@ -7,6 +7,7 @@
   var ctx = canvas.getContext('2d');
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var phases = document.querySelectorAll('.engine__phases li');
+  var viz = document.getElementById('engine-viz'), clock = document.getElementById('engine-clock'), lit = false;
 
   /* ---------- Géométrie (mm) ---------- */
   var X_FACE = 30, X_CONV = 145, X_THROAT = 168, X_EXIT = 178;
@@ -55,7 +56,8 @@
   /* ---------- Particules ---------- */
   var COL = { eth: [232, 184, 106], gox: [111, 182, 255], film: [246, 227, 184] };
   var parts = [];
-  var t = 0, tIgn = 1.4, spawnAcc = { eth: 0, gox: 0, film: 0 };
+  var T_FLOW = 1.6;            // ouverture des vannes (s), l'allumage suit à tIgn
+  var t = 0, tIgn = 3, spawnAcc = { eth: 0, gox: 0, film: 0 };
   var seed = 7;
   function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
 
@@ -90,7 +92,7 @@
     t += dt;
     var burning = t > tIgn;
     var rates = { eth: 90, gox: 150, film: 34 };
-    for (var k in rates) {
+    if (t > T_FLOW) for (var k in rates) {
       spawnAcc[k] += rates[k] * dt;
       while (spawnAcc[k] >= 1) { spawn(k); spawnAcc[k] -= 1; }
     }
@@ -329,8 +331,15 @@
   }
 
   function setPhase() {
-    var ph = t < tIgn ? 0 : t < tIgn + 1.2 ? 1 : 2;
+    var ph = t < T_FLOW ? -1 : t < tIgn ? 0 : t < tIgn + 1.2 ? 1 : 2;
     for (var i = 0; i < phases.length; i++) phases[i].classList.toggle('is-on', i === ph);
+    // horloge de séquence et lueur de la flamme autour du dessin
+    var T = t - tIgn;
+    clock.textContent = 'T ' + (T < 0 ? '\u2212' : '+') + ' ' + Math.abs(T).toFixed(1).replace('.', ',') + ' s';
+    var burn = T < 0 ? 0 : Math.min(1, T / 0.35) * (0.8 + 0.2 * noise(t * 2)) + (T < 0.5 ? Math.exp(-T * 7) : 0);
+    viz.style.setProperty('--burn', Math.min(1, burn).toFixed(3));
+    if (T >= 0 && !lit) { lit = true; viz.classList.add('is-lit', 'is-ignite'); }
+    else if (T < 0 && lit) { lit = false; viz.classList.remove('is-lit', 'is-ignite'); }
   }
 
   /* ---------- Boucle ---------- */
@@ -355,7 +364,7 @@
   function staticFrame() {
     // mouvement réduit : on simule le régime établi puis on affiche une image fixe
     parts = []; t = 0;
-    for (var i = 0; i < 240; i++) step(1 / 60);
+    for (var i = 0; i < 420; i++) step(1 / 60);
     render(); setPhase();
   }
 
@@ -363,10 +372,11 @@
   if (reduce) staticFrame(); else { render(); setPhase(); }
 
   if ('IntersectionObserver' in window) {
+    // la séquence démarre quand le moteur est bien à l'écran, et se met en pause dès qu'il en sort
     new IntersectionObserver(function (entries) {
-      visible = entries[0].isIntersecting;
-      visible ? start() : stop();
-    }, { threshold: 0.15 }).observe(canvas);
+      var r = entries[0].intersectionRatio;
+      if (r >= 0.45) start(); else if (!entries[0].isIntersecting) stop();
+    }, { threshold: [0, 0.45] }).observe(canvas);
   } else start();
 
   var rt;
