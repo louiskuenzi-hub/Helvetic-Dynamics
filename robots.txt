@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://helvetic-dynamics.ch/sitemap.xml

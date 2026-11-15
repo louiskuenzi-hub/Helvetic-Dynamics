@@ -38,11 +38,15 @@
   };
   Topo.prototype.field = function (t) {
     var nx = this.nx, ny = this.ny, cell = this.cell, sc = this.sc, s = this.o.seed, sp = this.o.speed;
+    var P = this.ptr, pa = P ? P.a : 0, R2 = P ? P.r * P.r : 1;
     for (var j = 0; j < ny; j++) for (var i = 0; i < nx; i++) {
       var x = i * cell * sc, y = j * cell * sc;
       // deux couches de relief qui glissent en sens opposés : les lignes « respirent »
       var v = 0.5 * fbm(x + t * sp, y + t * sp * 0.4, s) + 0.5 * fbm(x - t * sp * 0.7, y + 3.1 - t * sp * 0.3, s + 7);
-      this.F[j * nx + i] = v * 0.55 + this.base[j * nx + i];
+      var f = v * 0.55 + this.base[j * nx + i];
+      // le relief se soulève sous le curseur
+      if (pa > 0.002) { var dx = i * cell - P.x, dy = j * cell - P.y; f += pa * Math.exp(-(dx * dx + dy * dy) / R2); }
+      this.F[j * nx + i] = f;
     }
   };
   Topo.prototype.draw = function (t) {
@@ -86,7 +90,7 @@
     if (o.summit && this.peaks) {
       var p = this.peaks[0], sx = p[0] * W, sy = p[1] * H;
       ctx.fillStyle = '#e1251b'; ctx.beginPath(); ctx.moveTo(sx, sy - 7); ctx.lineTo(sx + 6, sy + 4); ctx.lineTo(sx - 6, sy + 4); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#0d0d0e'; ctx.font = '500 11px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillText(o.summit, sx + 12, sy);
+      ctx.fillStyle = '#f2f2f0'; ctx.font = '500 11px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillText(o.summit, sx + 12, sy);
     }
     if (o.grid) {
       ctx.strokeStyle = o.grid; ctx.lineWidth = 1; ctx.setLineDash([2, 6]); var g = W < 700 ? 120 : 180;
@@ -100,19 +104,16 @@
   var CFG = {
     'topo-hero': { seed: 3, scale: 3.2, speed: 0.05, alt: [400, 4120], step: 100, w: 0.8, wIdx: 1.4,
       peaks: function (W) { return W < 700 ? [[0.72, 0.8, 0.35, 0.95], [0.15, 0.25, 0.3, 0.3]] : [[0.84, 0.3, 0.2, 0.95], [0.92, 0.8, 0.18, 0.4], [0.18, 0.95, 0.25, 0.25]]; },
-      stroke: function () { return { std: 'rgba(13,13,14,0.13)', idx: 'rgba(13,13,14,0.32)' }; },
-      labels: { x: 0.6, y: 0.62 }, labelBg: '#ffffff', labelFg: '#5d5f63', summit: '4 120', grid: 'rgba(13,13,14,0.08)' },
-    'topo-descent': { seed: 11, scale: 2.4, speed: 0.04, alt: [0, 4000], step: 100, w: 0.8, wIdx: 1.4,
-      peaks: [[0.3, 0.1, 0.4, 0.8]],
-      stroke: function (ctx, H) {
-        var a = ctx.createLinearGradient(0, 0, 0, H); a.addColorStop(0, 'rgba(13,13,14,0.16)'); a.addColorStop(0.5, 'rgba(120,120,120,0.12)'); a.addColorStop(1, 'rgba(242,242,240,0.14)');
-        var b = ctx.createLinearGradient(0, 0, 0, H); b.addColorStop(0, 'rgba(13,13,14,0.34)'); b.addColorStop(0.5, 'rgba(140,140,140,0.25)'); b.addColorStop(1, 'rgba(242,242,240,0.3)');
-        return { std: a, idx: b };
-      } },
+      stroke: function () { return { std: 'rgba(242,242,240,0.12)', idx: 'rgba(242,242,240,0.3)' }; },
+      labels: { x: 0.6, y: 0.62 }, labelBg: '#000000', labelFg: '#8a8b8f', summit: '4 120', grid: 'rgba(242,242,240,0.06)' },
     'topo-dark': { seed: 21, scale: 2.8, speed: 0.04, alt: [0, 3000], step: 100, w: 0.7, wIdx: 1.2,
       peaks: [[0.85, 0.3, 0.3, 0.7]],
       stroke: function () { return { std: 'rgba(242,242,240,0.07)', idx: 'rgba(242,242,240,0.16)' }; },
       labels: { x: 0.82, y: 0.6 }, labelBg: '#000000', labelFg: '#6d6e72' },
+    'topo-contact': { seed: 34, scale: 2.8, speed: 0.04, alt: [0, 3000], step: 100, w: 0.7, wIdx: 1.2,
+      peaks: [[0.2, 0.75, 0.3, 0.7]],
+      stroke: function () { return { std: 'rgba(242,242,240,0.07)', idx: 'rgba(242,242,240,0.16)' }; },
+      labels: { x: 0.2, y: 0.9 }, labelBg: '#000000', labelFg: '#6d6e72' },
   };
   var maps = [];
   Object.keys(CFG).forEach(function (id) { var c = document.getElementById(id); if (c) maps.push(new Topo(c, CFG[id])); });
@@ -125,7 +126,7 @@
   function frame(now) {
     if (now - last > 45) { // ~22 images/s : fluide mais léger
       last = now; var t = (now - t0) / 1000;
-      maps.forEach(function (m) { if (m.visible) m.draw(t); });
+      maps.forEach(function (m) { if (m.ptr) { var q = m.ptr; q.x += (q.tx - q.x) * 0.3; q.y += (q.ty - q.y) * 0.3; q.a += (q.ta - q.a) * 0.18; } if (m.visible) m.draw(t); });
     }
     requestAnimationFrame(frame);
   }
@@ -135,28 +136,214 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(redrawAll);
   var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(redrawAll, 150); });
 
-  /* ---------- altimètre : plus on descend dans la page, plus on monte ---------- */
-  var altEl = document.getElementById('alt'), altBox = document.querySelector('.altimeter'), engine = document.getElementById('moteur');
-  function fmtAlt(m) {
-    if (m < 1000) return Math.round(m) + ' m';
-    var km = m / 1000;
-    return (km < 10 ? km.toFixed(1).replace('.', ',') : Math.round(km)) + ' km';
-  }
-  function updateAlt() {
-    var end = engine.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.35;
-    var p = Math.max(0, Math.min(1, window.scrollY / Math.max(1, end)));
-    altEl.textContent = p >= 1 ? 'Espace' : fmtAlt(404 * Math.pow(100000 / 404, p));
-    altBox.classList.toggle('is-on', window.scrollY > 260);
+  /* ---------- le relief suit le curseur dans le hero ---------- */
+  var hero = document.querySelector('.hero'), heroMap = maps.filter(function (m) { return m.c.id === 'topo-hero'; })[0];
+  if (hero && heroMap && !reduce && window.matchMedia('(hover: hover)').matches) {
+    heroMap.ptr = { x: 0, y: 0, tx: 0, ty: 0, a: 0, ta: 0, r: 150 };
+    hero.addEventListener('pointermove', function (e) {
+      var r = hero.getBoundingClientRect(), q = heroMap.ptr;
+      q.tx = e.clientX - r.left; q.ty = e.clientY - r.top; q.ta = 0.2;
+      if (q.a < 0.01) { q.x = q.tx; q.y = q.ty; }
+    });
+    hero.addEventListener('pointerleave', function () { heroMap.ptr.ta = 0; });
   }
 
-  /* ---------- navigation : sombre sur le blanc, claire sur le noir ---------- */
-  var nav = document.querySelector('.nav'), descent = document.querySelector('.descent');
-  function onScroll() {
-    nav.classList.toggle('is-scrolled', window.scrollY > 40);
-    var r = descent.getBoundingClientRect();
-    nav.classList.toggle('is-dark', r.top + r.height * 0.55 < 76);
-    updateAlt();
+  /* ---------- ascension : le défilement fait monter l'altitude de 404 m à 100 km ---------- */
+  var asc = document.querySelector('.ascent'), stage = document.querySelector('.ascent__stage'), sky = document.getElementById('ascent-sky');
+  var marks = [].slice.call(document.querySelectorAll('.ascent__marks li')), marksBox = document.querySelector('.ascent__marks');
+  var vEl = document.getElementById('asc-v'), uEl = document.getElementById('asc-u');
+  var l1 = document.querySelector('.ascent__l1'), l2 = document.querySelector('.ascent__l2');
+  var A0 = 404, A1 = 100000, LN = Math.log(A1 / A0), ascQ = 0, ascOn = false, sctx = sky.getContext('2d'), SW, SH, sdpr;
+  // couleur du ciel selon l'altitude : départ à l'aube, bleu nuit, puis noir de l'espace
+  var SKY = [[0, 9, 20, 50], [0.25, 11, 28, 68], [0.5, 5, 13, 36], [0.75, 1, 3, 12], [1, 0, 0, 0]];
+  function skyAt(q) {
+    for (var i = 1; i < SKY.length; i++) if (q <= SKY[i][0]) {
+      var a = SKY[i - 1], b = SKY[i], k = (q - a[0]) / (b[0] - a[0]);
+      return [a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k, a[3] + (b[3] - a[3]) * k];
+    }
+    return [0, 0, 0];
   }
-  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  function sstep(a, b, x) { x = Math.max(0, Math.min(1, (x - a) / (b - a))); return x * x * (3 - 2 * x); }
+  var stars = []; (function () { var sd = 41; function r() { sd = (sd * 16807) % 2147483647; return (sd - 1) / 2147483646; } for (var i = 0; i < 260; i++) stars.push({ x: r(), y: r(), s: 0.4 + r() * r() * 1.5, d: 0.25 + r() * 0.75, ph: r() * 6.28, tw: 0.5 + r() * 1.6 }); })();
+  function skySetup() { sdpr = Math.min(window.devicePixelRatio || 1, 2); SW = sky.clientWidth; SH = sky.clientHeight; sky.width = Math.round(SW * sdpr); sky.height = Math.round(SH * sdpr); }
+  function ascUpdate() {
+    var r = asc.getBoundingClientRect(), p = Math.max(0, Math.min(1, -r.top / Math.max(1, r.height - window.innerHeight)));
+    ascQ = Math.max(0, Math.min(1, (p - 0.05) / 0.85));
+    var alt = A0 * Math.exp(LN * ascQ), c = skyAt(ascQ);
+    stage.style.setProperty('--bg', 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')');
+    stage.style.setProperty('--fg', '#f2f2f0');
+    stage.style.setProperty('--dawn', (1 - sstep(0.04, 0.5, ascQ)).toFixed(3));
+    stage.style.setProperty('--sink', sstep(0, 0.4, ascQ).toFixed(3));
+    stage.style.setProperty('--top', (1 - sstep(0, 0.07, p)).toFixed(3));
+    stage.style.setProperty('--limb', sstep(0.8, 1, ascQ).toFixed(3));
+    if (alt < 1000) { vEl.textContent = Math.round(alt); uEl.textContent = 'm'; }
+    else { var km = alt / 1000; vEl.textContent = km < 10 ? km.toFixed(1).replace('.', ',') : Math.round(km); uEl.textContent = 'km'; }
+    l1.style.setProperty('--o', (1 - sstep(0.12, 0.3, ascQ)).toFixed(3));
+    l2.style.setProperty('--o', sstep(0.9, 1, ascQ).toFixed(3));
+    var H = stage.clientHeight, K = H * 2.6 / LN, cy = H / 2, u = Math.log(alt);
+    marks.forEach(function (li) {
+      var y = cy - (Math.log(+li.dataset.alt) - u) * K, d = (y - cy) / H;
+      li.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0)';
+      li.style.opacity = (d < 0 ? 1 - sstep(0.34, 0.46, -d) : 1 - sstep(0.1, 0.26, d)).toFixed(3);
+    });
+    return r;
+  }
+  function skyDraw(now) {
+    var H = SH, K = H * 2.6 / LN, cy = H / 2, u = Math.log(A0) + LN * ascQ;
+    sctx.setTransform(sdpr, 0, 0, sdpr, 0, 0); sctx.clearRect(0, 0, SW, SH);
+    var sa = 0.3 + 0.7 * sstep(0.15, 0.8, ascQ);
+    if (sa > 0.01) {
+      sctx.fillStyle = '#fff';
+      for (var i = 0; i < stars.length; i++) {
+        var s = stars[i], y = ((s.y + ascQ * 0.25 * s.d) % 1) * SH;
+        var tw = reduce ? 1 : 0.72 + 0.28 * Math.sin(now / 1000 * s.tw + s.ph);
+        sctx.globalAlpha = sa * s.d * tw;
+        sctx.beginPath(); sctx.arc(s.x * SW, y, s.s, 0, 6.2832); sctx.fill();
+      }
+      sctx.globalAlpha = 1;
+    }
+    // graduations de l'échelle (logarithmique), le long du trait vertical
+    var x0 = marksBox.getBoundingClientRect().left - stage.getBoundingClientRect().left;
+    sctx.strokeStyle = 'rgba(242,242,240,0.55)'; sctx.lineWidth = 1; sctx.beginPath();
+    for (var d = 100; d <= 100000; d *= 10) for (var k = 1; k < 10; k++) {
+      var ty = Math.round(cy - (Math.log(k * d) - u) * K) + 0.5;
+      if (ty < -2 || ty > H + 2) continue;
+      sctx.moveTo(x0, ty); sctx.lineTo(x0 + (k === 1 ? 16 : k === 5 ? 11 : 6), ty);
+    }
+    sctx.stroke();
+  }
+  function ascLoop(now) { if (!ascOn) return; skyDraw(now); requestAnimationFrame(ascLoop); }
+  skySetup();
+  if ('IntersectionObserver' in window) new IntersectionObserver(function (es) {
+    var on = es[0].isIntersecting; if (on && !ascOn) { ascOn = true; requestAnimationFrame(ascLoop); } else if (!on) ascOn = false;
+  }).observe(asc); else { ascOn = true; requestAnimationFrame(ascLoop); }
+  window.addEventListener('resize', function () { skySetup(); onScroll(); });
+
+  /* ---------- navigation : sombre sur le blanc, claire sur le noir ---------- */
+  var nav = document.querySelector('.nav'), toggle = document.querySelector('.nav__toggle'), ticking = false;
+  function onScroll() {
+    ticking = false;
+    var r = ascUpdate();
+    nav.classList.toggle('is-scrolled', window.scrollY > 40);
+    nav.classList.toggle('is-clear', r.top <= 76 && r.bottom > 76);
+  }
+  window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+  onScroll();
+
+  /* ---------- menu mobile ---------- */
+  function setMenu(open) { nav.classList.toggle('is-open', open); toggle.setAttribute('aria-expanded', open); toggle.querySelector('.nav__toggle-txt').textContent = open ? 'Fermer' : 'Menu'; document.documentElement.style.overflow = open ? 'hidden' : ''; }
+  toggle.addEventListener('click', function () { setMenu(!nav.classList.contains('is-open')); });
+  document.getElementById('menu').addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+  window.addEventListener('resize', function () { if (window.innerWidth > 760) setMenu(false); });
+
+  /* ---------- planches techniques : le dessin se trace à l'arrivée à l'écran ---------- */
+  var plates = [].slice.call(document.querySelectorAll('.plate'));
+  if ('IntersectionObserver' in window) {
+    var pio = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-in'); pio.unobserve(e.target); } }); }, { threshold: 0.35 });
+    plates.forEach(function (p) { pio.observe(p); });
+  } else plates.forEach(function (p) { p.classList.add('is-in'); });
+
+  /* ---------- contact : prépare un e-mail dans la messagerie du visiteur ---------- */
+  var MAIL = 'contact.polaris.industries.1@gmail.com';
+  var HINTS = {
+    "Rejoindre l'équipe": "Mécanique, électronique, essais\u00a0: il y a de la place pour celles et ceux qui veulent construire.",
+    "Partenariat": "Matériel, usinage, financement ou expertise\u00a0: chaque soutien rapproche le moteur du banc d'essai.",
+    "Question": "Presse, écoles, curiosité\u00a0: posez votre question, nous y répondrons."
+  };
+  var form = document.getElementById('composer'), hint = document.getElementById('composer-hint');
+  form.addEventListener('change', function (e) { if (e.target.name === 'sujet') hint.textContent = HINTS[e.target.value]; });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = form.elements, nom = f.nom.value.trim(), msg = f.message.value.trim();
+    var body = (msg || '') + (nom ? '\n\n' + nom : '');
+    window.location.href = 'mailto:' + MAIL + '?subject=' + encodeURIComponent(f.sujet.value + ' \u2014 Helvetic Dynamics') + (body ? '&body=' + encodeURIComponent(body) : '');
+  });
+
+  /* =====================================================================
+     MOUVEMENT : bandeau, révélations, compteurs, boutons aimantés, lettres
+     ===================================================================== */
+  var fine = window.matchMedia('(pointer: fine)').matches;
+
+  /* ---------- bandeau défilant : vitesse constante de 60 px/s ---------- */
+  var TICK = ['Propulsion liquide', 'Éthanol / GOX', 'Injecteur coaxial', 'Chambre en cuivre', 'Film de refroidissement', 'Tuyère', "Banc d'essai", 'Séquenceur de mise à feu', 'Fusées expérimentales', 'Avionique', 'Double déploiement', 'Essais au sol', 'Vol à ergols liquides'];
+  var trk = document.getElementById('ticker');
+  var items = TICK.map(function (t, i) { return '<span' + (i % 3 === 1 ? ' class="r"' : '') + '>' + t + '</span>'; }).join('');
+  trk.innerHTML = items + items;
+  function tickSpeed() { var w = trk.scrollWidth / 2; if (w > 0) trk.style.setProperty('--tdur', (w / 60).toFixed(1) + 's'); }
+  tickSpeed(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(tickSpeed);
+
+  /* ---------- titres de section : découpés mot par mot (le nom accessible reste dans aria-label) ---------- */
+  if (!reduce) [].forEach.call(document.querySelectorAll('main h2:not(.ascent__line)'), function (h) {
+    var t = h.textContent.trim(), i = 0; h.setAttribute('aria-label', t);
+    h.innerHTML = t.split(/ +/).map(function (w) { return '<span class="w" aria-hidden="true"><span class="wi" style="--i:' + (i++) + '">' + w.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span></span>'; }).join(' ');
+    h.classList.add('words');
+  });
+
+  /* ---------- chiffres clés : un rouleau par chiffre ---------- */
+  [].forEach.call(document.querySelectorAll('.stat'), function (st) {
+    var b = st.querySelector('b'), n = String(st.dataset.n); b.setAttribute('aria-label', n);
+    if (reduce) { b.textContent = n; return; }
+    var roll = ''; for (var q = 0; q < 20; q++) roll += '<span>' + (q % 10) + '</span>';
+    b.className = 'odo';
+    b.innerHTML = n.split('').map(function (d, k) { return '<span class="dg" aria-hidden="true"><i style="--n:' + (+d + 10) + ';--k:' + k + '">' + roll + '</i></span>'; }).join('');
+  });
+  [].forEach.call(document.querySelectorAll('.cascade'), function (c) { [].forEach.call(c.children, function (el, i) { el.style.setProperty('--i', i); }); });
+
+  /* ---------- révélations au défilement ---------- */
+  var revs = [].slice.call(document.querySelectorAll('.rv, .rv-l, .rv-r, .cascade, h2.words'));
+  function show(el) { el.classList.add('in'); if (el.classList.contains('stats')) [].forEach.call(el.querySelectorAll('.stat'), function (s, i) { setTimeout(function () { s.classList.add('in'); }, i * 120); }); }
+  if ('IntersectionObserver' in window) {
+    var rio = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { show(e.target); rio.unobserve(e.target); } }); }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    revs.forEach(function (el) { rio.observe(el); });
+    // les animations décoratives s'arrêtent hors écran
+    new IntersectionObserver(function (es) { es[0].target.classList.toggle('offscr', !es[0].isIntersecting); }, { rootMargin: '120px 0px' }).observe(document.querySelector('.ticker'));
+  } else revs.forEach(show);
+
+  /* ---------- lueur qui suit le curseur ---------- */
+  var glow = document.getElementById('cglow');
+  if (fine && !reduce) {
+    var gx = 0, gy = 0, gtx = 0, gty = 0, graf = 0;
+    var gstep = function () { gx += (gtx - gx) * 0.14; gy += (gty - gy) * 0.14; glow.style.transform = 'translate3d(' + gx.toFixed(1) + 'px,' + gy.toFixed(1) + 'px,0)'; graf = Math.abs(gtx - gx) + Math.abs(gty - gy) > 0.5 ? requestAnimationFrame(gstep) : 0; };
+    window.addEventListener('pointermove', function (e) { gtx = e.clientX; gty = e.clientY; if (!glow.classList.contains('on')) { gx = gtx; gy = gty; glow.classList.add('on'); } if (!graf) graf = requestAnimationFrame(gstep); }, { passive: true });
+    document.addEventListener('pointerleave', function () { glow.classList.remove('on'); });
+  }
+
+  /* ---------- boutons aimantés : le bouton est attiré de quelques pixels vers le curseur, son texte un peu plus ---------- */
+  if (fine && !reduce) {
+    [].forEach.call(document.querySelectorAll('.hero__actions .btn, .nav__cta, .composer .btn'), function (el) {
+      if (!el.querySelector('span')) el.innerHTML = '<span>' + el.innerHTML + '</span>';
+      el.classList.add('mag'); var lab = el.querySelector('span'), raf = 0, tx = 0, ty = 0, x = 0, y = 0, tp = 0;
+      var step = function (now) {
+        var a = 1 - Math.exp(-Math.min(64, now - tp) / 85); tp = now; x += (tx - x) * a; y += (ty - y) * a;
+        el.style.translate = x.toFixed(2) + 'px ' + y.toFixed(2) + 'px'; lab.style.translate = (x * 0.4).toFixed(2) + 'px ' + (y * 0.4).toFixed(2) + 'px';
+        if (Math.abs(tx - x) + Math.abs(ty - y) > 0.05) raf = requestAnimationFrame(step); else { raf = 0; if (!tx && !ty) { el.style.translate = ''; lab.style.translate = ''; } }
+      };
+      var kick = function () { if (!raf) { tp = performance.now(); raf = requestAnimationFrame(step); } };
+      el.addEventListener('pointermove', function (e) { var r = el.getBoundingClientRect(); tx = (e.clientX - (r.left - x + r.width / 2)) * 0.32; ty = (e.clientY - (r.top - y + r.height / 2)) * 0.42; kick(); }, { passive: true });
+      el.addEventListener('pointerleave', function () { tx = ty = 0; kick(); });
+    });
+
+    /* ---------- au survol, les lettres se brouillent puis se remettent en place (police à chasse fixe : rien ne bouge autour) ---------- */
+    var GL = 'ABCDEFGHJKLMNPRSTUVXYZ0123456789';
+    var scramble = function (el) {
+      if (el.__sc) return;
+      var node = null; (function find(n) { for (var i = 0; i < n.childNodes.length && !node; i++) { var k = n.childNodes[i]; if (k.nodeType === 3 && k.nodeValue.trim()) node = k; else if (k.nodeType === 1) find(k); } })(el);
+      if (!node) return;
+      var src = node.nodeValue, n = src.length, t0 = performance.now(), dur = Math.min(520, 160 + n * 22); el.__sc = 1;
+      if (!el.hasAttribute('aria-label')) el.setAttribute('aria-label', src.trim());
+      (function f(now) {
+        var q = Math.max(0, Math.min(1, (now - t0) / dur)), done = Math.floor(q * n), o = src.slice(0, done);
+        for (var i = done; i < n; i++) { var ch = src[i]; o += /[A-Za-zÀ-ÿ0-9]/.test(ch) ? GL[(Math.random() * GL.length) | 0] : ch; }
+        node.nodeValue = o; if (q < 1) requestAnimationFrame(f); else { node.nodeValue = src; el.__sc = 0; }
+      })(t0);
+    };
+    document.addEventListener('pointerover', function (e) {
+      if (window.innerWidth <= 760) return;
+      var el = e.target.closest && e.target.closest('.nav__links a, .btn, .engine__replay, .footer__top');
+      if (el && !el.contains(e.relatedTarget)) scramble(el);
+    }, { passive: true });
+  }
+
   document.getElementById('year').textContent = new Date().getFullYear();
 })();
