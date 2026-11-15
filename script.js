@@ -90,7 +90,7 @@
     if (o.summit && this.peaks) {
       var p = this.peaks[0], sx = p[0] * W, sy = p[1] * H;
       ctx.fillStyle = '#e1251b'; ctx.beginPath(); ctx.moveTo(sx, sy - 7); ctx.lineTo(sx + 6, sy + 4); ctx.lineTo(sx - 6, sy + 4); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#0d0d0e'; ctx.font = '500 11px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillText(o.summit, sx + 12, sy);
+      ctx.fillStyle = '#f2f2f0'; ctx.font = '500 11px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillText(o.summit, sx + 12, sy);
     }
     if (o.grid) {
       ctx.strokeStyle = o.grid; ctx.lineWidth = 1; ctx.setLineDash([2, 6]); var g = W < 700 ? 120 : 180;
@@ -104,12 +104,16 @@
   var CFG = {
     'topo-hero': { seed: 3, scale: 3.2, speed: 0.05, alt: [400, 4120], step: 100, w: 0.8, wIdx: 1.4,
       peaks: function (W) { return W < 700 ? [[0.72, 0.8, 0.35, 0.95], [0.15, 0.25, 0.3, 0.3]] : [[0.84, 0.3, 0.2, 0.95], [0.92, 0.8, 0.18, 0.4], [0.18, 0.95, 0.25, 0.25]]; },
-      stroke: function () { return { std: 'rgba(13,13,14,0.13)', idx: 'rgba(13,13,14,0.32)' }; },
-      labels: { x: 0.6, y: 0.62 }, labelBg: '#ffffff', labelFg: '#5d5f63', summit: '4 120', grid: 'rgba(13,13,14,0.08)' },
+      stroke: function () { return { std: 'rgba(242,242,240,0.12)', idx: 'rgba(242,242,240,0.3)' }; },
+      labels: { x: 0.6, y: 0.62 }, labelBg: '#000000', labelFg: '#8a8b8f', summit: '4 120', grid: 'rgba(242,242,240,0.06)' },
     'topo-dark': { seed: 21, scale: 2.8, speed: 0.04, alt: [0, 3000], step: 100, w: 0.7, wIdx: 1.2,
       peaks: [[0.85, 0.3, 0.3, 0.7]],
       stroke: function () { return { std: 'rgba(242,242,240,0.07)', idx: 'rgba(242,242,240,0.16)' }; },
       labels: { x: 0.82, y: 0.6 }, labelBg: '#000000', labelFg: '#6d6e72' },
+    'topo-contact': { seed: 34, scale: 2.8, speed: 0.04, alt: [0, 3000], step: 100, w: 0.7, wIdx: 1.2,
+      peaks: [[0.2, 0.75, 0.3, 0.7]],
+      stroke: function () { return { std: 'rgba(242,242,240,0.07)', idx: 'rgba(242,242,240,0.16)' }; },
+      labels: { x: 0.2, y: 0.9 }, labelBg: '#000000', labelFg: '#6d6e72' },
   };
   var maps = [];
   Object.keys(CFG).forEach(function (id) { var c = document.getElementById(id); if (c) maps.push(new Topo(c, CFG[id])); });
@@ -150,8 +154,8 @@
   var vEl = document.getElementById('asc-v'), uEl = document.getElementById('asc-u');
   var l1 = document.querySelector('.ascent__l1'), l2 = document.querySelector('.ascent__l2');
   var A0 = 404, A1 = 100000, LN = Math.log(A1 / A0), ascQ = 0, ascOn = false, sctx = sky.getContext('2d'), SW, SH, sdpr;
-  // couleur du ciel selon l'altitude : neige, bleu du jour, indigo, nuit
-  var SKY = [[0, 255, 255, 255], [0.16, 226, 238, 249], [0.36, 122, 172, 226], [0.54, 36, 78, 150], [0.72, 9, 20, 52], [0.88, 1, 3, 10], [1, 0, 0, 0]];
+  // couleur du ciel selon l'altitude : départ à l'aube, bleu nuit, puis noir de l'espace
+  var SKY = [[0, 9, 20, 50], [0.25, 11, 28, 68], [0.5, 5, 13, 36], [0.75, 1, 3, 12], [1, 0, 0, 0]];
   function skyAt(q) {
     for (var i = 1; i < SKY.length; i++) if (q <= SKY[i][0]) {
       var a = SKY[i - 1], b = SKY[i], k = (q - a[0]) / (b[0] - a[0]);
@@ -165,9 +169,12 @@
   function ascUpdate() {
     var r = asc.getBoundingClientRect(), p = Math.max(0, Math.min(1, -r.top / Math.max(1, r.height - window.innerHeight)));
     ascQ = Math.max(0, Math.min(1, (p - 0.05) / 0.85));
-    var alt = A0 * Math.exp(LN * ascQ), c = skyAt(ascQ), dark = ascQ > 0.47;
+    var alt = A0 * Math.exp(LN * ascQ), c = skyAt(ascQ);
     stage.style.setProperty('--bg', 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')');
-    stage.style.setProperty('--fg', dark ? '#f2f2f0' : '#0d0d0e');
+    stage.style.setProperty('--fg', '#f2f2f0');
+    stage.style.setProperty('--dawn', (1 - sstep(0.04, 0.5, ascQ)).toFixed(3));
+    stage.style.setProperty('--sink', sstep(0, 0.4, ascQ).toFixed(3));
+    stage.style.setProperty('--top', (1 - sstep(0, 0.07, p)).toFixed(3));
     stage.style.setProperty('--limb', sstep(0.8, 1, ascQ).toFixed(3));
     if (alt < 1000) { vEl.textContent = Math.round(alt); uEl.textContent = 'm'; }
     else { var km = alt / 1000; vEl.textContent = km < 10 ? km.toFixed(1).replace('.', ',') : Math.round(km); uEl.textContent = 'km'; }
@@ -182,9 +189,9 @@
     return r;
   }
   function skyDraw(now) {
-    var H = SH, K = H * 2.6 / LN, cy = H / 2, u = Math.log(A0) + LN * ascQ, dark = ascQ > 0.47;
+    var H = SH, K = H * 2.6 / LN, cy = H / 2, u = Math.log(A0) + LN * ascQ;
     sctx.setTransform(sdpr, 0, 0, sdpr, 0, 0); sctx.clearRect(0, 0, SW, SH);
-    var sa = sstep(0.5, 0.9, ascQ);
+    var sa = 0.3 + 0.7 * sstep(0.15, 0.8, ascQ);
     if (sa > 0.01) {
       sctx.fillStyle = '#fff';
       for (var i = 0; i < stars.length; i++) {
@@ -197,7 +204,7 @@
     }
     // graduations de l'échelle (logarithmique), le long du trait vertical
     var x0 = marksBox.getBoundingClientRect().left - stage.getBoundingClientRect().left;
-    sctx.strokeStyle = dark ? 'rgba(242,242,240,0.55)' : 'rgba(13,13,14,0.5)'; sctx.lineWidth = 1; sctx.beginPath();
+    sctx.strokeStyle = 'rgba(242,242,240,0.55)'; sctx.lineWidth = 1; sctx.beginPath();
     for (var d = 100; d <= 100000; d *= 10) for (var k = 1; k < 10; k++) {
       var ty = Math.round(cy - (Math.log(k * d) - u) * K) + 0.5;
       if (ty < -2 || ty > H + 2) continue;
@@ -218,7 +225,6 @@
     ticking = false;
     var r = ascUpdate();
     nav.classList.toggle('is-scrolled', window.scrollY > 40);
-    nav.classList.toggle('is-dark', r.bottom <= 76 || (r.top <= 76 && ascQ > 0.47));
     nav.classList.toggle('is-clear', r.top <= 76 && r.bottom > 76);
   }
   window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
@@ -237,6 +243,22 @@
     var pio = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-in'); pio.unobserve(e.target); } }); }, { threshold: 0.35 });
     plates.forEach(function (p) { pio.observe(p); });
   } else plates.forEach(function (p) { p.classList.add('is-in'); });
+
+  /* ---------- contact : prépare un e-mail dans la messagerie du visiteur ---------- */
+  var MAIL = 'contact.polaris.industries.1@gmail.com';
+  var HINTS = {
+    "Rejoindre l'équipe": "Mécanique, électronique, essais\u00a0: il y a de la place pour celles et ceux qui veulent construire.",
+    "Partenariat": "Matériel, usinage, financement ou expertise\u00a0: chaque soutien rapproche le moteur du banc d'essai.",
+    "Question": "Presse, écoles, curiosité\u00a0: posez votre question, nous y répondrons."
+  };
+  var form = document.getElementById('composer'), hint = document.getElementById('composer-hint');
+  form.addEventListener('change', function (e) { if (e.target.name === 'sujet') hint.textContent = HINTS[e.target.value]; });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = form.elements, nom = f.nom.value.trim(), msg = f.message.value.trim();
+    var body = (msg || '') + (nom ? '\n\n' + nom : '');
+    window.location.href = 'mailto:' + MAIL + '?subject=' + encodeURIComponent(f.sujet.value + ' \u2014 Helvetic Dynamics') + (body ? '&body=' + encodeURIComponent(body) : '');
+  });
 
   document.getElementById('year').textContent = new Date().getFullYear();
 })();
