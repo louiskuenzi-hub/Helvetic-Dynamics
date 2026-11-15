@@ -26,6 +26,24 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<!-- Intro : la mire se trace pendant le chargement, une seule fois par session -->
+<div id="boot" aria-hidden="true">
+  <svg class="boot__ring" viewBox="-60 -60 120 120"><circle class="c1" r="46" pathLength="1"/><circle class="c2" r="33" pathLength="1"/><path class="tk" d="M0-58V-50M0 50V58M-58 0H-50M50 0H58"/><path class="sc" d="M0 0V-46"/></svg>
+  <img class="boot__logo" src="assets/logo-mark.png" alt="" width="326" height="200">
+  <div class="boot__name">Helvetic Dynamics</div>
+  <div class="boot__coord" id="boot-c">LAT 00°00′00″ N · LON 0°00′00″ E</div>
+  <div class="boot__bar"><i></i></div>
+</div>
+<script>(function(){var d=document,b=d.getElementById("boot"),c=d.getElementById("boot-c"),seen=false;
+  try{seen=sessionStorage.getItem("hd-boot")==="1";sessionStorage.setItem("hd-boot","1")}catch(e){}
+  function done(){d.body.classList.add("ready")}
+  if(seen||matchMedia("(prefers-reduced-motion: reduce)").matches){b.remove();done();return}
+  var p=function(n){return(n<10?"0":"")+n},r=function(m){return Math.floor(Math.random()*m)};
+  var iv=setInterval(function(){c.textContent="LAT "+p(r(90))+"°"+p(r(60))+"′"+p(r(60))+"″ N · LON "+r(10)+"°"+p(r(60))+"′"+p(r(60))+"″ E"},70);
+  setTimeout(function(){clearInterval(iv);c.textContent="LAT 46°31′08″ N · LON 6°33′58″ E"},1150);
+  setTimeout(function(){b.classList.add("out");done();setTimeout(function(){b.remove()},1300)},1650)})();</script>
+<div id="cglow" aria-hidden="true"></div>
+<div class="progress" aria-hidden="true"></div>
 <a class="skip" href="#mission">Aller au contenu</a>
 
 <header class="nav" id="top">
@@ -73,6 +91,8 @@
     </dl>
   </section>
 
+  <div class="ticker" aria-hidden="true"><div class="trk" id="ticker"></div></div>
+
   <!-- ============ MISSION ============ -->
   <section class="section" id="mission" aria-labelledby="mission-title">
     <div class="wrap split">
@@ -80,15 +100,23 @@
         <p class="label">Mission</p>
         <h2 id="mission-title">Monter étape par étape, avec méthode.</h2>
       </div>
-      <div class="split__body">
+      <div class="split__body rv-r">
         <p>Helvetic Dynamics réunit des passionnés de fusées et d'ingénierie. Nous partons de l'astromodélisme de haut niveau pour aller vers la propulsion liquide.</p>
         <p>Comme sur une course en montagne, chaque palier se prépare : conception, calcul, essais au sol, puis validation en vol. On ne passe au suivant que quand le précédent est maîtrisé.</p>
       </div>
     </div>
 
+    <!-- Chiffres clés : modifie data-n et les textes au fil de l'avancement -->
+    <div class="wrap"><div class="stats rv">
+      <div class="stat" data-n="2"><b>2</b><span>Certifications</span><small>Niveaux 1 et 2 validés en vol</small></div>
+      <div class="stat" data-n="3"><b>3</b><span>Domaines</span><small>Propulsion, fusées, systèmes</small></div>
+      <div class="stat" data-n="5"><b>5</b><span>Étapes</span><small>De la fusée certifiée au vol à ergols liquides</small></div>
+      <div class="stat stat--red" data-n="100"><b>100</b><span>Kilomètres</span><small>La ligne de Kármán, où commence l'espace</small></div>
+    </div></div>
+
     <div class="wrap stages">
       <article class="stage">
-        <header class="stage__head">
+        <header class="stage__head rv-l">
           <div><span class="domain__alt">Palier 1</span><h3>Propulsion liquide</h3></div>
           <p>Injecteurs, chambres de combustion et tuyères. Dimensionnement thermique et choix des matériaux.</p>
         </header>
@@ -99,7 +127,7 @@
         </figure>
       </article>
       <article class="stage">
-        <header class="stage__head">
+        <header class="stage__head rv-l">
           <div><span class="domain__alt">Palier 2</span><h3>Fusées expérimentales</h3></div>
           <p>Conception et vol de fusées certifiées. Structure, aérodynamique, récupération et données de vol.</p>
         </header>
@@ -110,7 +138,7 @@
         </figure>
       </article>
       <article class="stage">
-        <header class="stage__head">
+        <header class="stage__head rv-l">
           <div><span class="domain__alt">Palier 3</span><h3>Systèmes &amp; électronique</h3></div>
           <p>Banc d'essai instrumenté, acquisition de pression et de poussée, séquenceurs de mise à feu.</p>
         </header>
@@ -184,7 +212,7 @@
 
     <div class="wrap">
     <!-- Modifie les valeurs ci-dessous au fur et à mesure de l'avancement -->
-    <dl class="specs">
+    <dl class="specs cascade">
       <div><dt>Combustible</dt><dd>Éthanol (C₂H₅OH)</dd></div>
       <div><dt>Comburant</dt><dd>Oxygène gazeux (GOX)</dd></div>
       <div><dt>Injecteur</dt><dd>Coaxial</dd></div>
@@ -212,7 +240,7 @@
         <rect class="node is-done" x="0%" y="196" width="11" height="11"/><rect class="node is-done" x="20%" y="156" width="11" height="11"/>
         <rect class="node is-current" x="40%" y="112" width="11" height="11"/><rect class="node" x="60%" y="66" width="11" height="11"/><rect class="node" x="80%" y="22" width="11" height="11"/>
       </svg>
-      <ol class="route">
+      <ol class="route cascade">
         <li class="is-done"><span class="route__km">Étape 1 · Validé</span><h3>Certification Niveau 1</h3><p>Premier vol certifié avec moteur haute puissance. Conception, construction et récupération.</p></li>
         <li class="is-done"><span class="route__km">Étape 2 · Validé</span><h3>Certification Niveau 2</h3><p>Moteur de classe supérieure et examen théorique. Récupération à double déploiement.</p></li>
         <li class="is-current"><span class="route__km">Étape 3 · En cours</span><h3>Moteur éthanol / GOX</h3><p>Dimensionnement de la chambre et de la tuyère, conception de l'injecteur et de l'alimentation.</p></li>
@@ -226,7 +254,7 @@
   <section class="section section--dark contact" id="contact" aria-labelledby="contact-title">
     <canvas class="topo topo--faint" id="topo-contact" aria-hidden="true"></canvas>
     <div class="wrap contact__grid">
-      <div class="contact__intro">
+      <div class="contact__intro rv-l">
         <img class="logo contact__mark" src="assets/logo-mark.png" alt="" width="326" height="200">
         <h2 id="contact-title">Rejoindre l'aventure, devenir partenaire&nbsp;?</h2>
         <p class="lead">Écrivez-nous. Nous répondons à toutes les demandes.</p>
@@ -238,7 +266,7 @@
         </dl>
       </div>
 
-      <form class="composer" id="composer" novalidate>
+      <form class="composer rv-r" id="composer" novalidate>
         <fieldset>
           <legend>Votre message concerne</legend>
           <div class="chips">
@@ -261,11 +289,24 @@
 
 <footer class="footer">
   <div class="footer__mark" aria-hidden="true">Helvetic Dynamics</div>
-  <div class="wrap footer__inner">
-    <span class="brand brand--small"><img class="logo brand__mark" src="assets/logo-mark.png" alt="" width="326" height="200"><span>Helvetic Dynamics</span></span>
-    <span>© <span id="year">2026</span> Helvetic Dynamics, association de propulsion</span>
-    <a class="footer__top" href="#top">Retour au sommet</a>
-    <a class="footer__ig" href="https://www.instagram.com/helvetic_dynamics/" target="_blank" rel="noopener" aria-label="Instagram de Helvetic Dynamics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg></a>
+  <div class="wrap footer__cols">
+    <div>
+      <span class="brand brand--small"><img class="logo brand__mark" src="assets/logo-mark.png" alt="" width="326" height="200"><span>Helvetic Dynamics</span></span>
+      <p>Association suisse de propulsion et de technologies spatiales. Nous concevons, fabriquons et testons des systèmes de propulsion.</p>
+    </div>
+    <div>
+      <h4>Le site</h4>
+      <ul><li><a href="#mission">Mission</a></li><li><a href="#ascension">Ascension</a></li><li><a href="#moteur">Moteur</a></li><li><a href="#parcours">Parcours</a></li></ul>
+    </div>
+    <div>
+      <h4>Nous joindre</h4>
+      <ul><li><a href="#contact">Écrire un message</a></li><li><a href="mailto:contact.polaris.industries.1@gmail.com">E-mail</a></li><li><a href="https://www.instagram.com/helvetic_dynamics/" target="_blank" rel="noopener">Instagram</a></li></ul>
+    </div>
+    <div class="footer__bar">
+      <span>© <span id="year">2026</span> Helvetic Dynamics, association de propulsion</span>
+      <span>46°31′08″ N, 6°33′58″ E</span>
+      <a class="footer__top" href="#top">Retour au sommet</a>
+    </div>
   </div>
 </footer>
 
