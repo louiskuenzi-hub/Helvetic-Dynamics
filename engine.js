@@ -58,6 +58,10 @@
   var parts = [];
   var T_FLOW = 1.6;            // ouverture des vannes (s), l'allumage suit à tIgn
   var t = 0, tIgn = 3, spawnAcc = { eth: 0, gox: 0, film: 0 };
+  var tCut = Infinity;         // arrêt moteur demandé par le visiteur
+  var thr = 1, thrCur = 1;     // régime demandé / régime réel (0,6 à 1)
+  var pc = 0, thrust = 0, samples = [], sAcc = 0;   // télémesure simulée, en fraction du nominal
+  function cutK() { return t < tCut ? 1 : Math.max(0, 1 - (t - tCut) / 0.55); }
   var seed = 7;
   function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
 
@@ -90,10 +94,11 @@
 
   function step(dt) {
     t += dt;
-    var burning = t > tIgn;
+    thrCur += (thr - thrCur) * (1 - Math.exp(-dt / 0.25));
+    var burning = t > tIgn && t < tCut;
     var rates = { eth: 90, gox: 150, film: 34 };
-    if (t > T_FLOW) for (var k in rates) {
-      spawnAcc[k] += rates[k] * dt;
+    if (t > T_FLOW && t < tCut) for (var k in rates) {
+      spawnAcc[k] += rates[k] * thrCur * dt;
       while (spawnAcc[k] >= 1) { spawn(k); spawnAcc[k] -= 1; }
     }
     for (var i = parts.length - 1; i >= 0; i--) {
@@ -127,12 +132,26 @@
       }
       if (p.x > view.x1 + 4 || (p.x > X_EXIT && p.burn && p.x - X_EXIT > plumeLen() + 10)) parts.splice(i, 1);
     }
+    telemetry(dt);
+  }
+
+  /* ---------- Télémesure simulée : pression chambre et poussée, en fraction du régime nominal ---------- */
+  function telemetry(dt) {
+    var since = t - tIgn, target = 0;
+    if (t >= tCut) target = 0;
+    else if (since >= 0) target = thrCur * (1 - Math.exp(-since / 0.05)) * (1 + 0.17 * Math.exp(-since / 0.13)) * (1 + 0.016 * (noise(t * 9) - 0.5) * 2);
+    else if (t > T_FLOW) target = 0.06 * thrCur * Math.min(1, (t - T_FLOW) / 0.4);
+    pc += (target - pc) * (1 - Math.exp(-dt / (t >= tCut ? 0.11 : 0.025)));
+    var fT = since >= 0 || t >= tCut ? pc * (0.985 + 0.03 * (noise(t * 6 + 4) - 0.5)) : pc * 0.15;
+    thrust += (fT - thrust) * (1 - Math.exp(-dt / 0.06));
+    sAcc += dt;
+    if (sAcc >= 1 / 40) { sAcc = 0; samples.push([t, pc, thrust]); if (samples.length > 900) samples.shift(); }
   }
 
   function plumeLen() {
     var k = Math.max(0, Math.min(1, (t - tIgn - 0.15) / 0.9));
     k = 1 - Math.pow(1 - k, 3);
-    return k * (view.x1 - X_EXIT);
+    return k * cutK() * (0.45 + 0.55 * thrCur) * (view.x1 - X_EXIT);
   }
 
   /* ---------- Dessin ---------- */
@@ -158,7 +177,8 @@
   function drawFlame() {
     var since = t - tIgn;
     if (since < 0) return;
-    var on = Math.min(1, since / 0.35);
+    var on = Math.min(1, since / 0.35) * cutK() * (0.5 + 0.5 * thrCur);
+    if (on <= 0) return;
     var flash = since < 0.5 ? Math.exp(-since * 7) : 0;
     var fl = 0.85 + 0.15 * noise(t * 2);
 
@@ -199,8 +219,9 @@
     for (x = xEnd; x >= X_EXIT; x -= 1) ctx.lineTo(px(x), py(-plumeR(x) * (1 + 0.03 * Math.sin(t * 37 + x))));
     ctx.closePath();
     var g = ctx.createLinearGradient(px(X_EXIT), 0, px(view.x1), 0);
-    g.addColorStop(0, 'rgba(150,175,255,0.55)');
-    g.addColorStop(0.35, 'rgba(110,140,255,0.22)');
+    var pa = cutK() * (0.55 + 0.45 * thrCur);
+    g.addColorStop(0, 'rgba(150,175,255,' + 0.55 * pa + ')');
+    g.addColorStop(0.35, 'rgba(110,140,255,' + 0.22 * pa + ')');
     g.addColorStop(1, 'rgba(90,110,255,0)');
     ctx.fillStyle = g; ctx.fill();
 
@@ -211,7 +232,7 @@
       if (xa > xEnd) break;
       var fade = (1 - k / N_DIAMONDS) * Math.min(1, (xEnd - xa) / LAMBDA);
       var ra = plumeR(xa) * 0.9, rb = plumeR(xb) * 0.9;
-      ctx.strokeStyle = 'rgba(255,215,190,' + 0.35 * fade + ')';
+      ctx.strokeStyle = 'rgba(255,215,190,' + 0.35 * fade * pa + ')';
       ctx.beginPath();
       ctx.moveTo(px(xa), py(ra)); ctx.lineTo(px(xb), py(-rb));
       ctx.moveTo(px(xa), py(-ra)); ctx.lineTo(px(xb), py(rb));
@@ -222,7 +243,7 @@
       var xc = X_EXIT + LAMBDA * (k + 0.5);
       if (xc > xEnd) break;
       var appear = Math.min(1, (xEnd - xc) / (LAMBDA * 0.6));
-      var a = (1 - k * 0.17) * appear * (0.85 + 0.15 * noise(t * 3 + k));
+      var a = (1 - k * 0.17) * appear * pa * (0.85 + 0.15 * noise(t * 3 + k));
       var hl = LAMBDA * 0.36, hh = plumeR(xc) * (0.62 - k * 0.05);
       var cx = px(xc), cy = py(0);
       var rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, hl * scale);
@@ -316,7 +337,7 @@
     label('CHAMBRE DE COMBUSTION', 88, 44, 88, 30);
     label('COL', X_THROAT, -44, X_THROAT, -R_CU);
     label('TUYÈRE', X_EXIT + 8, 44, X_EXIT - 4, R_CU);
-    if (t > tIgn + 0.8) label('DIAMANTS DE CHOC', X_EXIT + LAMBDA * 1.5, -40, X_EXIT + LAMBDA * 1.5, -8);
+    if (t > tIgn + 0.8 && t < tCut) label('DIAMANTS DE CHOC', X_EXIT + LAMBDA * 1.5, -40, X_EXIT + LAMBDA * 1.5, -8);
     ctx.restore();
   }
 
@@ -328,16 +349,67 @@
     drawHardware();
     drawParticles();
     if (showLabels) drawLabels();
+    drawTm();
   }
 
+  /* ---------- Tracé de la télémesure : fenêtre de 12 s qui défile ---------- */
+  var tm = document.getElementById('engine-tm'), tctx = tm.getContext('2d'), TW, TH;
+  var vPc = document.getElementById('tm-pc'), vF = document.getElementById('tm-f'), vAcc = 0;
+  function tmLayout() {
+    TW = tm.clientWidth; TH = tm.clientHeight;
+    tm.width = Math.round(TW * dpr); tm.height = Math.round(TH * dpr);
+  }
+  function drawTm() {
+    var SPAN = 12, t1 = Math.max(SPAN, t), t0 = t1 - SPAN, L = 44, R = 10, T = 12, B = 22, w = TW - L - R, h = TH - T - B, i;
+    function X(a) { return L + (a - t0) / SPAN * w; }
+    function Y(v) { return T + h - v / 1.25 * h; }
+    tctx.setTransform(dpr, 0, 0, dpr, 0, 0); tctx.clearRect(0, 0, TW, TH);
+    tctx.font = '500 10px "JetBrains Mono", ui-monospace, monospace'; tctx.lineWidth = 1; tctx.textBaseline = 'middle';
+    // grille : 0, 50 et 100 % du nominal
+    [0, 0.5, 1].forEach(function (v) {
+      tctx.strokeStyle = v === 1 ? 'rgba(242,242,240,.28)' : 'rgba(242,242,240,.12)'; tctx.setLineDash(v === 1 ? [4, 4] : []);
+      tctx.beginPath(); tctx.moveTo(L, Math.round(Y(v)) + 0.5); tctx.lineTo(TW - R, Math.round(Y(v)) + 0.5); tctx.stroke();
+      tctx.fillStyle = '#9a9b9f'; tctx.textAlign = 'right'; tctx.fillText(Math.round(v * 100) + ' %', L - 8, Y(v));
+    });
+    tctx.setLineDash([]);
+    // axe du temps, en secondes par rapport à l'allumage
+    tctx.textAlign = 'center'; tctx.textBaseline = 'alphabetic';
+    for (var s = Math.ceil(t0 - tIgn); s <= t1 - tIgn; s++) {
+      var x = Math.round(X(s + tIgn)) + 0.5; if (x < L + 2) continue;
+      tctx.strokeStyle = 'rgba(242,242,240,.25)'; tctx.beginPath(); tctx.moveTo(x, T + h); tctx.lineTo(x, T + h + (s % 3 === 0 ? 6 : 3)); tctx.stroke();
+      if (s % 3 === 0 && x < TW - R - 12) { tctx.fillStyle = '#9a9b9f'; tctx.fillText((s > 0 ? '+' : s < 0 ? '\u2212' : '') + Math.abs(s) + ' s', x, TH - 3); }
+    }
+    // événements de la séquence
+    [[T_FLOW, 'VANNES'], [tIgn, 'ALLUMAGE'], [tCut, 'ARRÊT']].forEach(function (ev) {
+      if (!(ev[0] <= t) || ev[0] < t0) return;
+      var x = Math.round(X(ev[0])) + 0.5;
+      tctx.strokeStyle = ev[1] === 'VANNES' ? 'rgba(242,242,240,.4)' : '#e1251b'; tctx.setLineDash([2, 3]);
+      tctx.beginPath(); tctx.moveTo(x, T); tctx.lineTo(x, T + h); tctx.stroke(); tctx.setLineDash([]);
+      if (TW > 520) { tctx.fillStyle = '#f2f2f0'; tctx.textAlign = 'left'; tctx.fillText(ev[1], x + 6, T + 9); }
+    });
+    // courbes
+    function trace(idx, col, lw) {
+      tctx.strokeStyle = col; tctx.lineWidth = lw; tctx.lineJoin = 'round'; tctx.beginPath(); var st = false;
+      for (i = 0; i < samples.length; i++) { var sm = samples[i]; if (sm[0] < t0) continue; var px2 = X(sm[0]), py2 = Y(sm[idx]); st ? tctx.lineTo(px2, py2) : tctx.moveTo(px2, py2); st = true; }
+      tctx.stroke();
+      if (samples.length) { tctx.fillStyle = col; tctx.beginPath(); tctx.arc(X(t), Y(idx === 1 ? pc : thrust), 3, 0, 6.2832); tctx.fill(); }
+    }
+    trace(2, '#FF8A3D', 1.5); trace(1, '#f2f2f0', 1.5);
+  }
+  function fmtPct(v) { return Math.round(Math.max(0, v) * 100) + ' %'; }
+
   function setPhase() {
-    var ph = t < T_FLOW ? -1 : t < tIgn ? 0 : t < tIgn + 1.2 ? 1 : 2;
+    var ph = t < T_FLOW ? -1 : t < tIgn ? 0 : t >= tCut ? 3 : t < tIgn + 1.2 ? 1 : 2;
     for (var i = 0; i < phases.length; i++) phases[i].classList.toggle('is-on', i === ph);
     // horloge de séquence et lueur de la flamme autour du dessin
-    var T = t - tIgn;
+    var T = Math.min(t, tCut) - tIgn;
+    vPc.textContent = fmtPct(pc); vF.textContent = fmtPct(thrust);
+    cutBtn.disabled = reduce || !(t > tIgn && t < tCut);
+    audio();
     clock.textContent = 'T ' + (T < 0 ? '\u2212' : '+') + ' ' + Math.abs(T).toFixed(1).replace('.', ',') + ' s';
-    var burn = T < 0 ? 0 : Math.min(1, T / 0.35) * (0.8 + 0.2 * noise(t * 2)) + (T < 0.5 ? Math.exp(-T * 7) : 0);
+    var burn = T < 0 ? 0 : (Math.min(1, T / 0.35) * (0.8 + 0.2 * noise(t * 2)) + (T < 0.5 ? Math.exp(-T * 7) : 0)) * cutK() * (0.45 + 0.55 * thrCur);
     viz.style.setProperty('--burn', Math.min(1, burn).toFixed(3));
+    viz.classList.toggle('is-cut', t >= tCut);
     if (T >= 0 && !lit) { lit = true; viz.classList.add('is-lit', 'is-ignite'); }
     else if (T < 0 && lit) { lit = false; viz.classList.remove('is-lit', 'is-ignite'); }
   }
@@ -351,38 +423,79 @@
     step(dt);
     render();
     setPhase();
+    if (t > tCut + 3.5) { running = false; idle = true; audio(); return; }   // moteur éteint et purgé : on arrête de dessiner
     requestAnimationFrame(loop);
   }
-  function start() { if (running || reduce) return; running = true; last = performance.now(); requestAnimationFrame(loop); }
-  function stop() { running = false; }
+  var idle = false;
+  function start() { if (running || reduce || idle) return; running = true; last = performance.now(); requestAnimationFrame(loop); }
+  function stop() { running = false; audio(); }
+
+  /* ---------- Son (coupé par défaut) : grondement synthétisé, piloté par la pression chambre ---------- */
+  var cutBtn = document.getElementById('engine-cut'), sndBtn = document.getElementById('engine-snd'), thrIn = document.getElementById('engine-thr'), thrOut = document.getElementById('engine-thr-o');
+  var ac = null, gRumble, gHiss, lp, sndOn = false;
+  function audioInit() {
+    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+    ac = new AC();
+    var n = ac.sampleRate * 3, buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0), b = 0, i;
+    for (i = 0; i < n; i++) { b = (b + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = b * 3.5; }       // bruit brun
+    for (i = 0; i < 2000; i++) { var k = i / 2000; d[n - 2000 + i] = d[n - 2000 + i] * (1 - k) + d[i] * k; }  // raccord de boucle
+    var src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+    lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 120;
+    gRumble = ac.createGain(); gRumble.gain.value = 0;
+    src.connect(lp); lp.connect(gRumble); gRumble.connect(ac.destination);
+    var wb = ac.createBuffer(1, n, ac.sampleRate), wd = wb.getChannelData(0); for (i = 0; i < n; i++) wd[i] = Math.random() * 2 - 1;
+    var ws = ac.createBufferSource(); ws.buffer = wb; ws.loop = true;
+    var bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = 0.6;
+    gHiss = ac.createGain(); gHiss.gain.value = 0;
+    ws.connect(bp); bp.connect(gHiss); gHiss.connect(ac.destination);
+    src.start(); ws.start(); return true;
+  }
+  function audio() {
+    if (!ac) return;
+    var live = sndOn && running, now = ac.currentTime;
+    var flow = live && t > T_FLOW && t < tCut ? 1 : 0;
+    gRumble.gain.setTargetAtTime(live ? Math.min(1.2, pc) * 0.5 : 0, now, 0.04);
+    lp.frequency.setTargetAtTime(90 + 520 * Math.min(1.2, pc), now, 0.05);
+    gHiss.gain.setTargetAtTime(live ? 0.012 * flow + 0.03 * Math.min(1, pc) : 0, now, 0.05);
+  }
+  sndBtn.addEventListener('click', function () {
+    if (!ac && !audioInit()) { sndBtn.disabled = true; return; }
+    sndOn = !sndOn; if (sndOn && ac.state === 'suspended') ac.resume();
+    sndBtn.setAttribute('aria-pressed', sndOn); sndBtn.lastChild.nodeValue = sndOn ? 'Son activé' : 'Son coupé';
+    audio();
+  });
+  cutBtn.addEventListener('click', function () { if (t > tIgn && t < tCut) tCut = t; });
+  function setThr() { thr = +thrIn.value / 100; thrOut.textContent = thrIn.value + ' %'; if (reduce) staticFrame(); }
+  thrIn.addEventListener('input', setThr);
 
   function restart() {
-    parts = []; t = 0; spawnAcc = { eth: 0, gox: 0, film: 0 };
+    parts = []; t = 0; spawnAcc = { eth: 0, gox: 0, film: 0 }; tCut = Infinity; pc = 0; thrust = 0; samples = []; thrCur = thr;
     if (reduce) { staticFrame(); return; }
     render(); setPhase();
+    if (idle) { idle = false; start(); }
   }
   function staticFrame() {
     // mouvement réduit : on simule le régime établi puis on affiche une image fixe
-    parts = []; t = 0;
+    parts = []; t = 0; tCut = Infinity; pc = 0; thrust = 0; samples = []; thrCur = thr;
     for (var i = 0; i < 420; i++) step(1 / 60);
     render(); setPhase();
   }
 
-  layout();
+  layout(); tmLayout(); thr = thrCur = +thrIn.value / 100;
   if (reduce) staticFrame(); else { render(); setPhase(); }
 
   if ('IntersectionObserver' in window) {
     // la séquence démarre quand le moteur est bien à l'écran, et se met en pause dès qu'il en sort
     new IntersectionObserver(function (entries) {
       var r = entries[0].intersectionRatio;
-      if (r >= 0.45) start(); else if (!entries[0].isIntersecting) stop();
-    }, { threshold: [0, 0.45] }).observe(canvas);
+      if (r >= 0.3) start(); else if (!entries[0].isIntersecting) stop();
+    }, { threshold: [0, 0.3] }).observe(viz);
   } else start();
 
   var rt;
   window.addEventListener('resize', function () {
     clearTimeout(rt);
-    rt = setTimeout(function () { layout(); if (!running) render(); }, 120);
+    rt = setTimeout(function () { layout(); tmLayout(); if (!running) render(); }, 120);
   });
   document.getElementById('engine-replay').addEventListener('click', restart);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (!running) render(); });
