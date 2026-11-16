@@ -2,6 +2,28 @@
 (function () {
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ---------- atmosphère standard (US Standard Atmosphere 1976) : pression en Pa, température en K ---------- */
+  var ISA = [[0, -6.5], [11, 0], [20, 1], [32, 2.8], [47, 0], [51, -2.8], [71, -2], [84.852, 0]];
+  var HI_P = [[86, 0.3734], [90, 0.1836], [95, 0.076], [100, 0.032]], HI_T = [[86, 186.87], [91, 186.87], [95, 188.4], [100, 195.08]];
+  function lerpTab(tab, x, log) {
+    for (var i = 1; i < tab.length; i++) if (x <= tab[i][0] || i === tab.length - 1) {
+      var a = tab[i - 1], b = tab[i], k = Math.max(0, Math.min(1, (x - a[0]) / (b[0] - a[0])));
+      return log ? Math.exp(Math.log(a[1]) + (Math.log(b[1]) - Math.log(a[1])) * k) : a[1] + (b[1] - a[1]) * k;
+    }
+  }
+  function atm(z) { // z : altitude géométrique en mètres
+    var km = z / 1000;
+    if (km > 86) return { p: lerpTab(HI_P, km, true), T: lerpTab(HI_T, km, false) };
+    var h = 6356.766 * km / (6356.766 + km), T = 288.15, P = 101325;
+    for (var i = 0; i < ISA.length - 1; i++) {
+      var h0 = ISA[i][0], L = ISA[i][1], top = Math.min(h, ISA[i + 1][0]), dh = top - h0;
+      if (dh <= 0) break;
+      if (L) { var T1 = T + L * dh; P *= Math.pow(T1 / T, -34.1632 / L); T = T1; } else P *= Math.exp(-34.1632 * dh / T);
+    }
+    return { p: P, T: T };
+  }
+  window.HD = { atm: atm };
+
   /* ---------- bruit déterministe ---------- */
   function hash(x, y, s) { var h = Math.sin(x * 127.1 + y * 311.7 + s * 74.7) * 43758.5453; return h - Math.floor(h); }
   function vnoise(x, y, s) {
@@ -152,6 +174,8 @@
   var asc = document.querySelector('.ascent'), stage = document.querySelector('.ascent__stage'), sky = document.getElementById('ascent-sky');
   var marks = [].slice.call(document.querySelectorAll('.ascent__marks li')), marksBox = document.querySelector('.ascent__marks');
   var vEl = document.getElementById('asc-v'), uEl = document.getElementById('asc-u');
+  var pEl = document.getElementById('asc-p'), tEl = document.getElementById('asc-t'), aEl = document.getElementById('asc-a');
+  function frn(n, d) { return n.toFixed(d).replace('.', ',').replace('-', '\u2212'); }
   var l1 = document.querySelector('.ascent__l1'), l2 = document.querySelector('.ascent__l2');
   var A0 = 404, A1 = 100000, LN = Math.log(A1 / A0), ascQ = 0, ascOn = false, sctx = sky.getContext('2d'), SW, SH, sdpr;
   // couleur du ciel selon l'altitude : départ à l'aube, bleu nuit, puis noir de l'espace
@@ -178,6 +202,10 @@
     stage.style.setProperty('--limb', sstep(0.8, 1, ascQ).toFixed(3));
     if (alt < 1000) { vEl.textContent = Math.round(alt); uEl.textContent = 'm'; }
     else { var km = alt / 1000; vEl.textContent = km < 10 ? km.toFixed(1).replace('.', ',') : Math.round(km); uEl.textContent = 'km'; }
+    var at = atm(alt), hp = at.p / 100, sh = (1 - at.p / 101325) * 100;
+    pEl.textContent = hp >= 100 ? Math.round(hp) + ' hPa' : hp >= 1 ? frn(hp, 1) + ' hPa' : at.p >= 1 ? frn(at.p, 1) + ' Pa' : frn(at.p, 2) + ' Pa';
+    tEl.textContent = frn(at.T - 273.15, 0) + ' °C';
+    aEl.textContent = frn(sh, sh < 99 ? 1 : sh < 99.99 ? 2 : sh < 99.9999 ? 4 : 5) + ' %';
     l1.style.setProperty('--o', (1 - sstep(0.12, 0.3, ascQ)).toFixed(3));
     l2.style.setProperty('--o', sstep(0.9, 1, ascQ).toFixed(3));
     var H = stage.clientHeight, K = H * 2.6 / LN, cy = H / 2, u = Math.log(alt);
@@ -202,6 +230,70 @@
       }
       sctx.globalAlpha = 1;
     }
+    // ce que l'on croise en montant : nuages, avion de ligne, ballon-sonde, nuages noctulescents, étoile filante, ligne de Kármán
+    var tm = reduce ? 0 : now / 1000, k1 = Math.max(0.62, Math.min(1, SW / 1300));
+    function yAt(a) { return cy - (Math.log(a) - u) * K; }
+    function seen(y, m) { return y > -m && y < H + m; }
+    var yy, xx, i2;
+    // nuages bas
+    [[1900, 0.3, 1.0, 190], [2500, 0.72, 0.8, 150], [5800, 0.52, 1.15, 230], [7000, 0.12, 0.7, 170]].forEach(function (c, n) {
+      yy = yAt(c[0]); if (!seen(yy, 120)) return;
+      xx = ((c[1] + tm * 0.004 * (1 + n * 0.3)) % 1.3 - 0.15) * SW;
+      for (i2 = 0; i2 < 4; i2++) {
+        var bx = xx + (i2 - 1.5) * c[3] * 0.42 * k1, by = yy + (i2 % 2 ? -9 : 5) * c[2], br = c[3] * (0.55 + (i2 % 2) * 0.2) * k1;
+        var gr = sctx.createRadialGradient(bx, by, 0, bx, by, br);
+        gr.addColorStop(0, 'rgba(225,232,250,' + 0.1 * c[2] + ')'); gr.addColorStop(1, 'rgba(225,232,250,0)');
+        sctx.fillStyle = gr; sctx.save(); sctx.translate(bx, by); sctx.scale(1, 0.32); sctx.translate(-bx, -by); sctx.beginPath(); sctx.arc(bx, by, br, 0, 6.2832); sctx.fill(); sctx.restore();
+      }
+    });
+    // avion de ligne et sa traînée
+    yy = yAt(10300);
+    if (seen(yy, 40)) {
+      xx = ((tm * 0.022 + 0.38) % 1.25 - 0.12) * SW;
+      var tr = sctx.createLinearGradient(xx - 420 * k1, 0, xx, 0); tr.addColorStop(0, 'rgba(242,242,240,0)'); tr.addColorStop(1, 'rgba(242,242,240,.5)');
+      sctx.strokeStyle = tr; sctx.lineWidth = 2; sctx.beginPath(); sctx.moveTo(xx - 420 * k1, yy); sctx.lineTo(xx - 16 * k1, yy); sctx.stroke();
+      sctx.save(); sctx.translate(xx, yy); sctx.scale(k1, k1); sctx.fillStyle = '#f2f2f0';
+      sctx.beginPath(); sctx.moveTo(20, 0); sctx.lineTo(14, -2.4); sctx.lineTo(-14, -2.4); sctx.lineTo(-20, -9); sctx.lineTo(-23, -9); sctx.lineTo(-19, 0); sctx.lineTo(-14, 2.4); sctx.lineTo(14, 2.4); sctx.closePath(); sctx.fill();
+      sctx.beginPath(); sctx.moveTo(4, 0); sctx.lineTo(-9, 11); sctx.lineTo(-13, 11); sctx.lineTo(-6, 0); sctx.closePath(); sctx.fill();
+      sctx.restore();
+    }
+    // ballon-sonde : enveloppe, suspente, nacelle
+    yy = yAt(33000);
+    if (seen(yy, 120) && ascQ < 0.93) {
+      sctx.globalAlpha = 1 - sstep(0.78, 0.93, ascQ);
+      xx = SW * (SW < 760 ? 0.87 : 0.44) + Math.sin(tm * 0.35) * 10; var by2 = yy + Math.sin(tm * 0.5) * 4, R = 30 * k1;
+      sctx.strokeStyle = 'rgba(242,242,240,.85)'; sctx.lineWidth = 1.2; sctx.fillStyle = 'rgba(242,242,240,.07)';
+      sctx.beginPath(); sctx.moveTo(xx, by2 + R * 1.45); sctx.bezierCurveTo(xx - R * 1.5, by2 + R * 0.2, xx - R * 1.1, by2 - R, xx, by2 - R); sctx.bezierCurveTo(xx + R * 1.1, by2 - R, xx + R * 1.5, by2 + R * 0.2, xx, by2 + R * 1.45); sctx.fill(); sctx.stroke();
+      sctx.beginPath(); sctx.moveTo(xx, by2 + R * 1.45); sctx.lineTo(xx + Math.sin(tm * 0.5) * 3, by2 + R * 3.6); sctx.stroke();
+      sctx.fillStyle = '#e1251b'; sctx.fillRect(xx + Math.sin(tm * 0.5) * 3 - 4, by2 + R * 3.6, 8, 7);
+      sctx.globalAlpha = 1;
+    }
+    // nuages noctulescents : voiles bleutés très fins
+    yy = yAt(82000);
+    if (seen(yy, 90)) {
+      for (i2 = 0; i2 < 11; i2++) {
+        sctx.lineWidth = 1 + (i2 % 3) * 0.9;
+        var oy = (i2 - 5) * 8 + Math.sin(i2 * 2.3) * 6, ph = i2 * 1.7 + tm * 0.08, xa = SW * (0.18 + 0.07 * Math.sin(i2 * 3.1)), xb = SW * (0.98 - 0.09 * Math.cos(i2 * 1.9));
+        var ng = sctx.createLinearGradient(xa, 0, xb, 0); ng.addColorStop(0, 'rgba(140,205,255,0)'); ng.addColorStop(0.3 + 0.04 * i2, 'rgba(150,215,255,' + (0.3 + 0.3 * Math.abs(Math.sin(i2 * 1.3))) + ')'); ng.addColorStop(1, 'rgba(140,205,255,0)');
+        sctx.strokeStyle = ng; sctx.beginPath();
+        for (var sx = xa; sx <= xb; sx += 14) { var wy = yy + oy + Math.sin(sx * 0.011 + ph) * 7 + Math.sin(sx * 0.031 + ph * 1.7) * 2.5; sx === xa ? sctx.moveTo(sx, wy) : sctx.lineTo(sx, wy); }
+        sctx.stroke();
+      }
+    }
+    // étoile filante : les météores se consument vers 90 km
+    yy = yAt(92000);
+    if (!reduce && seen(yy, 60)) {
+      var mc = (tm % 7) / 0.9, mn = Math.floor(tm / 7);
+      if (mc < 1) {
+        var mx = SW * (0.3 + 0.5 * ((mn * 0.618) % 1)), ml = 150 * k1, hx = mx + ml * mc, hy = yy - 20 + ml * 0.42 * mc, ma = Math.sin(mc * 3.1416);
+        var mg = sctx.createLinearGradient(hx - ml * 0.55, hy - ml * 0.23, hx, hy); mg.addColorStop(0, 'rgba(255,255,255,0)'); mg.addColorStop(1, 'rgba(255,255,255,' + 0.9 * ma + ')');
+        sctx.strokeStyle = mg; sctx.lineWidth = 1.6; sctx.beginPath(); sctx.moveTo(hx - ml * 0.55, hy - ml * 0.23); sctx.lineTo(hx, hy); sctx.stroke();
+      }
+    }
+    // ligne de Kármán
+    yy = Math.round(yAt(100000)) + 0.5;
+    if (seen(yy, 4)) { sctx.save(); sctx.strokeStyle = 'rgba(225,37,27,.7)'; sctx.lineWidth = 1; sctx.setLineDash([10, 7]); sctx.beginPath(); sctx.moveTo(marksBox.getBoundingClientRect().left - stage.getBoundingClientRect().left + 128, yy); sctx.lineTo(SW, yy); sctx.stroke(); sctx.restore(); }
+
     // graduations de l'échelle (logarithmique), le long du trait vertical
     var x0 = marksBox.getBoundingClientRect().left - stage.getBoundingClientRect().left;
     sctx.strokeStyle = 'rgba(242,242,240,0.55)'; sctx.lineWidth = 1; sctx.beginPath();
@@ -243,6 +335,44 @@
     var pio = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-in'); pio.unobserve(e.target); } }); }, { threshold: 0.35 });
     plates.forEach(function (p) { pio.observe(p); });
   } else plates.forEach(function (p) { p.classList.add('is-in'); });
+
+  /* ---------- planches : survoler une ligne de la légende allume son repère sur le dessin, et inversement ---------- */
+  plates.forEach(function (pl) {
+    var btns = [].slice.call(pl.querySelectorAll('.legend--link button')), sc = pl.querySelector('.plate__scroll');
+    if (!btns.length) return;
+    function set(n, on) {
+      [].forEach.call(pl.querySelectorAll('.b[data-n="' + n + '"]'), function (g) { g.classList.toggle('hot', on); });
+      btns.forEach(function (b) { if (b.dataset.n === String(n)) b.classList.toggle('hot', on); });
+    }
+    var pinned = null;
+    function pin(n) { if (pinned) set(pinned, false); pinned = n === pinned ? null : n; if (pinned) set(pinned, true); }
+    btns.forEach(function (b) {
+      b.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') set(b.dataset.n, true); });
+      b.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse' && pinned !== b.dataset.n) set(b.dataset.n, false); });
+      b.addEventListener('focus', function () { set(b.dataset.n, true); });
+      b.addEventListener('blur', function () { if (pinned !== b.dataset.n) set(b.dataset.n, false); });
+      b.addEventListener('click', function () {
+        pin(b.dataset.n);
+        // sur petit écran, la planche défile jusqu'au repère
+        var g = pl.querySelector('.b[data-n="' + b.dataset.n + '"] .bal');
+        if (g && sc.scrollWidth > sc.clientWidth + 4) { var r = g.getBoundingClientRect(), s = sc.getBoundingClientRect(); sc.scrollTo({ left: sc.scrollLeft + r.left - s.left - s.width / 2, behavior: reduce ? 'auto' : 'smooth' }); }
+      });
+    });
+    [].forEach.call(pl.querySelectorAll('.b'), function (g) {
+      g.addEventListener('pointerenter', function () { set(g.dataset.n, true); });
+      g.addEventListener('pointerleave', function () { if (pinned !== g.dataset.n) set(g.dataset.n, false); });
+    });
+  });
+
+  /* ---------- navigation : le lien de la section en cours est marqué ---------- */
+  if ('IntersectionObserver' in window) {
+    var links = {}; [].forEach.call(document.querySelectorAll('.nav__links a'), function (a) { links[a.getAttribute('href').slice(1)] = a; });
+    var nio = new IntersectionObserver(function (es) { es.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      Object.keys(links).forEach(function (id) { if (id === e.target.id) links[id].setAttribute('aria-current', 'true'); else links[id].removeAttribute('aria-current'); });
+    }); }, { rootMargin: '-45% 0px -54% 0px' });
+    Object.keys(links).forEach(function (id) { var el = document.getElementById(id); if (el) nio.observe(el); });
+  }
 
   /* ---------- contact : prépare un e-mail dans la messagerie du visiteur ---------- */
   var MAIL = 'contact.polaris.industries.1@gmail.com';
@@ -291,7 +421,7 @@
   [].forEach.call(document.querySelectorAll('.cascade'), function (c) { [].forEach.call(c.children, function (el, i) { el.style.setProperty('--i', i); }); });
 
   /* ---------- révélations au défilement ---------- */
-  var revs = [].slice.call(document.querySelectorAll('.rv, .rv-l, .rv-r, .cascade, h2.words'));
+  var revs = [].slice.call(document.querySelectorAll('.rv, .rv-l, .rv-r, .cascade, h2.words, .route__profile'));
   function show(el) { el.classList.add('in'); if (el.classList.contains('stats')) [].forEach.call(el.querySelectorAll('.stat'), function (s, i) { setTimeout(function () { s.classList.add('in'); }, i * 120); }); }
   if ('IntersectionObserver' in window) {
     var rio = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { show(e.target); rio.unobserve(e.target); } }); }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
@@ -311,7 +441,7 @@
 
   /* ---------- boutons aimantés : le bouton est attiré de quelques pixels vers le curseur, son texte un peu plus ---------- */
   if (fine && !reduce) {
-    [].forEach.call(document.querySelectorAll('.hero__actions .btn, .nav__cta, .composer .btn'), function (el) {
+    [].forEach.call(document.querySelectorAll('.hero__actions .btn, .nav__cta, .composer .btn, .lab__fit'), function (el) {
       if (!el.querySelector('span')) el.innerHTML = '<span>' + el.innerHTML + '</span>';
       el.classList.add('mag'); var lab = el.querySelector('span'), raf = 0, tx = 0, ty = 0, x = 0, y = 0, tp = 0;
       var step = function (now) {
@@ -340,10 +470,16 @@
     };
     document.addEventListener('pointerover', function (e) {
       if (window.innerWidth <= 760) return;
-      var el = e.target.closest && e.target.closest('.nav__links a, .btn, .engine__replay, .footer__top');
+      var el = e.target.closest && e.target.closest('.nav__links a, .btn, .engine__btn:not(.engine__snd), .lab__fit, .footer__top');
       if (el && !el.contains(e.relatedTarget)) scramble(el);
     }, { passive: true });
   }
+
+  /* ---------- curseurs : la partie parcourue de la piste est claire ---------- */
+  [].forEach.call(document.querySelectorAll('.rng input'), function (el) {
+    var f = function () { el.style.setProperty('--fill', ((el.value - el.min) / (el.max - el.min) * 100).toFixed(1) + '%'); };
+    el.addEventListener('input', f); f();
+  });
 
   document.getElementById('year').textContent = new Date().getFullYear();
 })();
