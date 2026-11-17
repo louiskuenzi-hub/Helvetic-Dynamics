@@ -549,10 +549,10 @@ section[id] { scroll-margin-top: 70px; }
 
 /* ---------- navigation : section en cours ---------- */
 @media (min-width: 761px) {
-  .nav__links a[aria-current] { opacity: 1; }
-  .nav__links a:not(.nav__cta) { position: relative; }
-  .nav__links a:not(.nav__cta)::after { content: ""; position: absolute; left: 50%; bottom: -12px; width: 5px; height: 5px; margin-left: -2.5px; background: var(--red); transform: rotate(45deg) scale(0); transition: transform .3s var(--ease); }
-  .nav__links a[aria-current]:not(.nav__cta)::after { transform: rotate(45deg) scale(1); }
+  .nav__links > li > a[aria-current] { opacity: 1; }
+  .nav__links > li > a:not(.nav__cta) { position: relative; }
+  .nav__links > li > a:not(.nav__cta)::after { content: ""; position: absolute; left: 50%; bottom: -12px; width: 5px; height: 5px; margin-left: -2.5px; background: var(--red); transform: rotate(45deg) scale(0); transition: transform .3s var(--ease); }
+  .nav__links > li > a[aria-current]:not(.nav__cta)::after { transform: rotate(45deg) scale(1); }
 }
 /* sur petit écran, les révélations latérales arrivent par le bas : rien ne dépasse de la page */
 @media (max-width: 760px) and (prefers-reduced-motion: no-preference) { .js .rv-l:not(.in), .js .rv-r:not(.in) { transform: translate3d(0, 30px, 0); } }
@@ -568,4 +568,17 @@ section[id] { scroll-margin-top: 70px; }
   .js .route__profile.in .drop { opacity: 1; }
   .js .route__profile .node { opacity: 0; transition: opacity .3s calc(var(--i) * .45s + .15s); }
   .js .route__profile.in .node { opacity: 1; }
+}
+
+/* ---------- SÉLECTEUR DE LANGUE ---------- */
+.vh { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.nav__lang { display: flex; align-items: center; }
+.lang { display: inline-flex; border: 1px solid var(--rule-d); }
+.nav__links .lang a { opacity: .5; padding: 7px 8px; font-size: .68rem; }
+.nav__links .lang a + a { border-left: 1px solid var(--rule-d); }
+.nav__links .lang a:hover { opacity: 1; }
+.nav__links .lang a[aria-current] { opacity: 1; background: rgba(242, 242, 240, .12); }
+@media (max-width: 760px) {
+  .nav__lang { margin-top: 26px; }
+  .nav__links .lang a { display: block; font: 500 .9rem/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; padding: 13px 16px; border-radius: 0; }
 }

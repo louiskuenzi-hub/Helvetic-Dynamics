@@ -6,6 +6,8 @@
   if (!canvas) return;
   var ctx = canvas.getContext('2d');
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var TXT = function (k) { return window.HD && window.HD.t ? window.HD.t(k) : k; };
+  var NUM = function (v, d) { return window.HD && window.HD.num ? window.HD.num(v, d) : v.toFixed(d); };
   var phases = document.querySelectorAll('.engine__phases li');
   var viz = document.getElementById('engine-viz'), clock = document.getElementById('engine-clock'), lit = false;
 
@@ -329,15 +331,15 @@
     ctx.textBaseline = 'alphabetic';
     // flèches d'arrivée
     ctx.fillStyle = '#E8B86A'; ctx.textAlign = 'left';
-    ctx.fillText('ÉTHANOL', px(view.x0 + 2), py(4));
+    ctx.fillText(TXT('js.eng.eth'), px(view.x0 + 2), py(4));
     ctx.fillStyle = '#6FB6FF'; ctx.textAlign = 'center';
     ctx.fillText('GOX', px(17.4), py(52.5));
     ctx.fillText('GOX', px(17.4), py(-52.5) + 10);
-    label('INJECTEUR COAXIAL', 40, 50, 28, 38, 'left');
-    label('CHAMBRE DE COMBUSTION', 88, 44, 88, 30);
-    label('COL', X_THROAT, -44, X_THROAT, -R_CU);
-    label('TUYÈRE', X_EXIT + 8, 44, X_EXIT - 4, R_CU);
-    if (t > tIgn + 0.8 && t < tCut) label('DIAMANTS DE CHOC', X_EXIT + LAMBDA * 1.5, -40, X_EXIT + LAMBDA * 1.5, -8);
+    label(TXT('js.eng.inj'), 40, 50, 28, 38, 'left');
+    label(TXT('js.eng.cham'), 88, 44, 88, 30);
+    label(TXT('js.eng.throat'), X_THROAT, -44, X_THROAT, -R_CU);
+    label(TXT('js.eng.noz'), X_EXIT + 8, 44, X_EXIT - 4, R_CU);
+    if (t > tIgn + 0.8 && t < tCut) label(TXT('js.eng.diam'), X_EXIT + LAMBDA * 1.5, -40, X_EXIT + LAMBDA * 1.5, -8);
     ctx.restore();
   }
 
@@ -380,12 +382,12 @@
       if (s % 3 === 0 && x < TW - R - 12) { tctx.fillStyle = '#9a9b9f'; tctx.fillText((s > 0 ? '+' : s < 0 ? '\u2212' : '') + Math.abs(s) + ' s', x, TH - 3); }
     }
     // événements de la séquence
-    [[T_FLOW, 'VANNES'], [tIgn, 'ALLUMAGE'], [tCut, 'ARRÊT']].forEach(function (ev) {
+    [[T_FLOW, 'js.eng.valves'], [tIgn, 'js.eng.ign'], [tCut, 'js.eng.stop']].forEach(function (ev) {
       if (!(ev[0] <= t) || ev[0] < t0) return;
       var x = Math.round(X(ev[0])) + 0.5;
-      tctx.strokeStyle = ev[1] === 'VANNES' ? 'rgba(242,242,240,.4)' : '#e1251b'; tctx.setLineDash([2, 3]);
+      tctx.strokeStyle = ev[1] === 'js.eng.valves' ? 'rgba(242,242,240,.4)' : '#e1251b'; tctx.setLineDash([2, 3]);
       tctx.beginPath(); tctx.moveTo(x, T); tctx.lineTo(x, T + h); tctx.stroke(); tctx.setLineDash([]);
-      if (TW > 520) { tctx.fillStyle = '#f2f2f0'; tctx.textAlign = 'left'; tctx.fillText(ev[1], x + 6, T + 9); }
+      if (TW > 520) { tctx.fillStyle = '#f2f2f0'; tctx.textAlign = 'left'; tctx.fillText(TXT(ev[1]), x + 6, T + 9); }
     });
     // courbes
     function trace(idx, col, lw) {
@@ -406,7 +408,7 @@
     vPc.textContent = fmtPct(pc); vF.textContent = fmtPct(thrust);
     cutBtn.disabled = reduce || !(t > tIgn && t < tCut);
     audio();
-    clock.textContent = 'T ' + (T < 0 ? '\u2212' : '+') + ' ' + Math.abs(T).toFixed(1).replace('.', ',') + ' s';
+    clock.textContent = 'T ' + (T < 0 ? '\u2212' : '+') + ' ' + NUM(Math.abs(T), 1) + ' s';
     var burn = T < 0 ? 0 : (Math.min(1, T / 0.35) * (0.8 + 0.2 * noise(t * 2)) + (T < 0.5 ? Math.exp(-T * 7) : 0)) * cutK() * (0.45 + 0.55 * thrCur);
     viz.style.setProperty('--burn', Math.min(1, burn).toFixed(3));
     viz.classList.toggle('is-cut', t >= tCut);
@@ -461,7 +463,7 @@
   sndBtn.addEventListener('click', function () {
     if (!ac && !audioInit()) { sndBtn.disabled = true; return; }
     sndOn = !sndOn; if (sndOn && ac.state === 'suspended') ac.resume();
-    sndBtn.setAttribute('aria-pressed', sndOn); sndBtn.lastChild.nodeValue = sndOn ? 'Son activé' : 'Son coupé';
+    sndBtn.setAttribute('aria-pressed', sndOn); sndBtn.lastElementChild.textContent = TXT(sndOn ? 'js.snd.on' : 'js.snd.off');
     audio();
   });
   cutBtn.addEventListener('click', function () { if (t > tIgn && t < tCut) tCut = t; });

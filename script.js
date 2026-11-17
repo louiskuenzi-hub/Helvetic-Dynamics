@@ -22,7 +22,9 @@
     }
     return { p: P, T: T };
   }
-  window.HD = { atm: atm };
+  window.HD = window.HD || {}; window.HD.atm = atm;
+  var T = function (k) { return window.HD.t ? window.HD.t(k) : k; };
+  var NUM = function (v, d) { return window.HD.num ? window.HD.num(v, d) : (d ? v.toFixed(d) : String(Math.round(v))); };
 
   /* ---------- bruit déterministe ---------- */
   function hash(x, y, s) { var h = Math.sin(x * 127.1 + y * 311.7 + s * 74.7) * 43758.5453; return h - Math.floor(h); }
@@ -101,7 +103,7 @@
         }
       }
       ctx.stroke();
-      if (best) labels.push({ x: best.x, y: best.y, t: String(L).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') });
+      if (best) labels.push({ x: best.x, y: best.y, t: NUM(L, 0) });
     }
     ctx.font = '500 10px "JetBrains Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     labels.forEach(function (l) {
@@ -112,7 +114,7 @@
     if (o.summit && this.peaks) {
       var p = this.peaks[0], sx = p[0] * W, sy = p[1] * H;
       ctx.fillStyle = '#e1251b'; ctx.beginPath(); ctx.moveTo(sx, sy - 7); ctx.lineTo(sx + 6, sy + 4); ctx.lineTo(sx - 6, sy + 4); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#f2f2f0'; ctx.font = '500 11px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillText(o.summit, sx + 12, sy);
+      ctx.fillStyle = '#f2f2f0'; ctx.font = '500 11px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillText(T(o.summit), sx + 12, sy);
     }
     if (o.grid) {
       ctx.strokeStyle = o.grid; ctx.lineWidth = 1; ctx.setLineDash([2, 6]); var g = W < 700 ? 120 : 180;
@@ -127,7 +129,7 @@
     'topo-hero': { seed: 3, scale: 3.2, speed: 0.05, alt: [400, 4120], step: 100, w: 0.8, wIdx: 1.4,
       peaks: function (W) { return W < 700 ? [[0.72, 0.8, 0.35, 0.95], [0.15, 0.25, 0.3, 0.3]] : [[0.84, 0.3, 0.2, 0.95], [0.92, 0.8, 0.18, 0.4], [0.18, 0.95, 0.25, 0.25]]; },
       stroke: function () { return { std: 'rgba(242,242,240,0.12)', idx: 'rgba(242,242,240,0.3)' }; },
-      labels: { x: 0.6, y: 0.62 }, labelBg: '#000000', labelFg: '#8a8b8f', summit: '4 120', grid: 'rgba(242,242,240,0.06)' },
+      labels: { x: 0.6, y: 0.62 }, labelBg: '#000000', labelFg: '#8a8b8f', summit: 'js.summit', grid: 'rgba(242,242,240,0.06)' },
     'topo-dark': { seed: 21, scale: 2.8, speed: 0.04, alt: [0, 3000], step: 100, w: 0.7, wIdx: 1.2,
       peaks: [[0.85, 0.3, 0.3, 0.7]],
       stroke: function () { return { std: 'rgba(242,242,240,0.07)', idx: 'rgba(242,242,240,0.16)' }; },
@@ -175,7 +177,7 @@
   var marks = [].slice.call(document.querySelectorAll('.ascent__marks li')), marksBox = document.querySelector('.ascent__marks');
   var vEl = document.getElementById('asc-v'), uEl = document.getElementById('asc-u');
   var pEl = document.getElementById('asc-p'), tEl = document.getElementById('asc-t'), aEl = document.getElementById('asc-a');
-  function frn(n, d) { return n.toFixed(d).replace('.', ',').replace('-', '\u2212'); }
+  function frn(n, d) { return NUM(n, d); }
   var l1 = document.querySelector('.ascent__l1'), l2 = document.querySelector('.ascent__l2');
   var A0 = 404, A1 = 100000, LN = Math.log(A1 / A0), ascQ = 0, ascOn = false, sctx = sky.getContext('2d'), SW, SH, sdpr;
   // couleur du ciel selon l'altitude : départ à l'aube, bleu nuit, puis noir de l'espace
@@ -200,8 +202,8 @@
     stage.style.setProperty('--sink', sstep(0, 0.4, ascQ).toFixed(3));
     stage.style.setProperty('--top', (1 - sstep(0, 0.07, p)).toFixed(3));
     stage.style.setProperty('--limb', sstep(0.8, 1, ascQ).toFixed(3));
-    if (alt < 1000) { vEl.textContent = Math.round(alt); uEl.textContent = 'm'; }
-    else { var km = alt / 1000; vEl.textContent = km < 10 ? km.toFixed(1).replace('.', ',') : Math.round(km); uEl.textContent = 'km'; }
+    if (alt < 1000) { vEl.textContent = NUM(alt, 0); uEl.textContent = 'm'; }
+    else { var km = alt / 1000; vEl.textContent = km < 10 ? NUM(km, 1) : NUM(km, 0); uEl.textContent = 'km'; }
     var at = atm(alt), hp = at.p / 100, sh = (1 - at.p / 101325) * 100;
     pEl.textContent = hp >= 100 ? Math.round(hp) + ' hPa' : hp >= 1 ? frn(hp, 1) + ' hPa' : at.p >= 1 ? frn(at.p, 1) + ' Pa' : frn(at.p, 2) + ' Pa';
     tEl.textContent = frn(at.T - 273.15, 0) + ' °C';
@@ -323,7 +325,7 @@
   onScroll();
 
   /* ---------- menu mobile ---------- */
-  function setMenu(open) { nav.classList.toggle('is-open', open); toggle.setAttribute('aria-expanded', open); toggle.querySelector('.nav__toggle-txt').textContent = open ? 'Fermer' : 'Menu'; document.documentElement.style.overflow = open ? 'hidden' : ''; }
+  function setMenu(open) { nav.classList.toggle('is-open', open); toggle.setAttribute('aria-expanded', open); toggle.querySelector('.nav__toggle-txt').textContent = T(open ? 'js.close' : 'js.menu'); document.documentElement.style.overflow = open ? 'hidden' : ''; }
   toggle.addEventListener('click', function () { setMenu(!nav.classList.contains('is-open')); });
   document.getElementById('menu').addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
@@ -366,7 +368,7 @@
 
   /* ---------- navigation : le lien de la section en cours est marqué ---------- */
   if ('IntersectionObserver' in window) {
-    var links = {}; [].forEach.call(document.querySelectorAll('.nav__links a'), function (a) { links[a.getAttribute('href').slice(1)] = a; });
+    var links = {}; [].forEach.call(document.querySelectorAll('.nav__links a[href^="#"]'), function (a) { links[a.getAttribute('href').slice(1)] = a; });
     var nio = new IntersectionObserver(function (es) { es.forEach(function (e) {
       if (!e.isIntersecting) return;
       Object.keys(links).forEach(function (id) { if (id === e.target.id) links[id].setAttribute('aria-current', 'true'); else links[id].removeAttribute('aria-current'); });
@@ -376,18 +378,13 @@
 
   /* ---------- contact : prépare un e-mail dans la messagerie du visiteur ---------- */
   var MAIL = 'contact.polaris.industries.1@gmail.com';
-  var HINTS = {
-    "Rejoindre l'équipe": "Mécanique, électronique, essais\u00a0: il y a de la place pour celles et ceux qui veulent construire.",
-    "Partenariat": "Matériel, usinage, financement ou expertise\u00a0: chaque soutien rapproche le moteur du banc d'essai.",
-    "Question": "Presse, écoles, curiosité\u00a0: posez votre question, nous y répondrons."
-  };
   var form = document.getElementById('composer'), hint = document.getElementById('composer-hint');
-  form.addEventListener('change', function (e) { if (e.target.name === 'sujet') hint.textContent = HINTS[e.target.value]; });
+  form.addEventListener('change', function (e) { if (e.target.name === 'sujet') hint.textContent = T('js.hint.' + e.target.value); });
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var f = form.elements, nom = f.nom.value.trim(), msg = f.message.value.trim();
     var body = (msg || '') + (nom ? '\n\n' + nom : '');
-    window.location.href = 'mailto:' + MAIL + '?subject=' + encodeURIComponent(f.sujet.value + ' \u2014 Helvetic Dynamics') + (body ? '&body=' + encodeURIComponent(body) : '');
+    window.location.href = 'mailto:' + MAIL + '?subject=' + encodeURIComponent(T('js.subj.' + f.sujet.value) + ' \u2014 Helvetic Dynamics') + (body ? '&body=' + encodeURIComponent(body) : '');
   });
 
   /* =====================================================================
@@ -396,7 +393,7 @@
   var fine = window.matchMedia('(pointer: fine)').matches;
 
   /* ---------- bandeau défilant : vitesse constante de 60 px/s ---------- */
-  var TICK = ['Propulsion liquide', 'Éthanol / GOX', 'Injecteur coaxial', 'Chambre en cuivre', 'Film de refroidissement', 'Tuyère', "Banc d'essai", 'Séquenceur de mise à feu', 'Fusées expérimentales', 'Avionique', 'Double déploiement', 'Essais au sol', 'Vol à ergols liquides'];
+  var TICK = T('js.tick').split('|');
   var trk = document.getElementById('ticker');
   var items = TICK.map(function (t, i) { return '<span' + (i % 3 === 1 ? ' class="r"' : '') + '>' + t + '</span>'; }).join('');
   trk.innerHTML = items + items;
@@ -479,6 +476,11 @@
   [].forEach.call(document.querySelectorAll('.rng input'), function (el) {
     var f = function () { el.style.setProperty('--fill', ((el.value - el.min) / (el.max - el.min) * 100).toFixed(1) + '%'); };
     el.addEventListener('input', f); f();
+  });
+
+  /* ---------- changement de langue : on reste à la même hauteur de page ---------- */
+  [].forEach.call(document.querySelectorAll('.lang a'), function (a) {
+    a.addEventListener('click', function () { if (location.hash) a.href = a.getAttribute('href').split('#')[0] + location.hash; });
   });
 
   document.getElementById('year').textContent = new Date().getFullYear();

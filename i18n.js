@@ -1,0 +1,125 @@
+/* Textes des parties animées du site, dans les trois langues.
+   Généré par tools/build.py — ne pas modifier à la main. */
+(function () {
+  var S = {
+ "de": {
+  "js.close": "Schließen",
+  "js.eng.cham": "BRENNKAMMER",
+  "js.eng.diam": "STOSSDIAMANTEN",
+  "js.eng.eth": "ETHANOL",
+  "js.eng.ign": "ZÜNDUNG",
+  "js.eng.inj": "KOAXIALINJEKTOR",
+  "js.eng.noz": "DÜSE",
+  "js.eng.stop": "ABSCHALTUNG",
+  "js.eng.throat": "HALS",
+  "js.eng.valves": "VENTILE",
+  "js.hint.join": "Mechanik, Elektronik, Versuche: Es gibt Platz für alle, die bauen wollen.",
+  "js.hint.partner": "Material, Fertigung, Finanzierung oder Fachwissen: Jede Unterstützung bringt das Triebwerk näher an den Prüfstand.",
+  "js.hint.question": "Presse, Schulen, Neugier: Stellen Sie Ihre Frage, wir antworten.",
+  "js.lab.exit": "AUSTRITT, M = ",
+  "js.lab.fit": "Angepasst",
+  "js.lab.fitbtn": "Düse an diese Höhe anpassen",
+  "js.lab.fitd": "Die Gase treten mit dem Druck der Umgebungsluft aus. Der Strahl bleibt gerade und die Düse gibt alles, was sie kann.",
+  "js.lab.maxbtn": "Düse maximal öffnen",
+  "js.lab.over": "Überexpandiert",
+  "js.lab.over1k": "über 1.000",
+  "js.lab.overd": "Die Gase treten mit geringerem Druck aus als die Luft ringsherum. Die Atmosphäre schnürt den Strahl ein und der Schub sinkt.",
+  "js.lab.sep": "Strömungsablösung",
+  "js.lab.sepd": "Die Umgebungsluft ist so dicht, dass sie den Strahl in die Düse zurückdrängt. Der divergente Teil nützt nichts mehr und der Strahl wird instabil.",
+  "js.lab.throat": "HALS, M = 1",
+  "js.lab.under": "Unterexpandiert",
+  "js.lab.underd": "Die Gase stehen beim Austritt noch unter Druck und entspannen sich draußen weiter. Eine längere Düse hätte diesen Schub genutzt.",
+  "js.menu": "Menü",
+  "js.snd.off": "Ton aus",
+  "js.snd.on": "Ton ein",
+  "js.subj.join": "Im Team mitarbeiten",
+  "js.subj.partner": "Partnerschaft",
+  "js.subj.question": "Frage",
+  "js.summit": "4.120",
+  "js.tick": "Flüssigkeitsantrieb|Ethanol / GOX|Koaxialinjektor|Kupferkammer|Filmkühlung|Düse|Prüfstand|Zündsequenzer|Experimentalraketen|Avionik|Doppelauslösung|Bodentests|Flug mit Flüssigtreibstoff"
+ },
+ "en": {
+  "js.close": "Close",
+  "js.eng.cham": "COMBUSTION CHAMBER",
+  "js.eng.diam": "SHOCK DIAMONDS",
+  "js.eng.eth": "ETHANOL",
+  "js.eng.ign": "IGNITION",
+  "js.eng.inj": "COAXIAL INJECTOR",
+  "js.eng.noz": "NOZZLE",
+  "js.eng.stop": "SHUTDOWN",
+  "js.eng.throat": "THROAT",
+  "js.eng.valves": "VALVES",
+  "js.hint.join": "Mechanics, electronics, testing: there is room for anyone who wants to build.",
+  "js.hint.partner": "Hardware, machining, funding or expertise: every bit of support brings the engine closer to the test stand.",
+  "js.hint.question": "Press, schools, plain curiosity: ask your question and we will answer it.",
+  "js.lab.exit": "EXIT, M = ",
+  "js.lab.fit": "Matched",
+  "js.lab.fitbtn": "Match the nozzle to this altitude",
+  "js.lab.fitd": "The gases leave at the pressure of the ambient air. The jet stays straight and the nozzle gives everything it can.",
+  "js.lab.maxbtn": "Open the nozzle to the maximum",
+  "js.lab.over": "Over-expanded",
+  "js.lab.over1k": "over 1,000",
+  "js.lab.overd": "The gases leave at a lower pressure than the air around them. The atmosphere pinches the jet and thrust drops.",
+  "js.lab.sep": "Flow separation",
+  "js.lab.sepd": "The ambient air is so dense that it pushes the jet back inside the nozzle. The diverging section is useless and the jet becomes unstable.",
+  "js.lab.throat": "THROAT, M = 1",
+  "js.lab.under": "Under-expanded",
+  "js.lab.underd": "The gases are still under pressure when they leave and finish expanding outside. A longer nozzle would have recovered that thrust.",
+  "js.menu": "Menu",
+  "js.snd.off": "Sound off",
+  "js.snd.on": "Sound on",
+  "js.subj.join": "Joining the team",
+  "js.subj.partner": "Partnership",
+  "js.subj.question": "Question",
+  "js.summit": "4,120",
+  "js.tick": "Liquid propulsion|Ethanol / GOX|Coaxial injector|Copper chamber|Film cooling|Nozzle|Test stand|Firing sequencer|Experimental rockets|Avionics|Dual deployment|Ground testing|Liquid-propellant flight"
+ },
+ "fr": {
+  "js.close": "Fermer",
+  "js.eng.cham": "CHAMBRE DE COMBUSTION",
+  "js.eng.diam": "DIAMANTS DE CHOC",
+  "js.eng.eth": "ÉTHANOL",
+  "js.eng.ign": "ALLUMAGE",
+  "js.eng.inj": "INJECTEUR COAXIAL",
+  "js.eng.noz": "TUYÈRE",
+  "js.eng.stop": "ARRÊT",
+  "js.eng.throat": "COL",
+  "js.eng.valves": "VANNES",
+  "js.hint.join": "Mécanique, électronique, essais : il y a de la place pour celles et ceux qui veulent construire.",
+  "js.hint.partner": "Matériel, usinage, financement ou expertise : chaque soutien rapproche le moteur du banc d'essai.",
+  "js.hint.question": "Presse, écoles, curiosité : posez votre question, nous y répondrons.",
+  "js.lab.exit": "SORTIE, M = ",
+  "js.lab.fit": "Adaptée",
+  "js.lab.fitbtn": "Adapter la tuyère à cette altitude",
+  "js.lab.fitd": "Les gaz sortent à la pression de l'air ambiant. Le jet reste droit et la tuyère donne tout ce qu'elle peut.",
+  "js.lab.maxbtn": "Ouvrir la tuyère au maximum",
+  "js.lab.over": "Sur-détendue",
+  "js.lab.over1k": "plus de 1 000",
+  "js.lab.overd": "Les gaz sortent à une pression plus basse que l'air qui les entoure. L'atmosphère pince le jet et la poussée baisse.",
+  "js.lab.sep": "Jet décollé",
+  "js.lab.sepd": "L'air ambiant est si dense qu'il repousse le jet à l'intérieur de la tuyère. Le divergent ne sert plus à rien et le jet devient instable.",
+  "js.lab.throat": "COL, M = 1",
+  "js.lab.under": "Sous-détendue",
+  "js.lab.underd": "Les gaz sortent encore sous pression et finissent de se détendre dehors. Une tuyère plus longue aurait récupéré cette poussée.",
+  "js.menu": "Menu",
+  "js.snd.off": "Son coupé",
+  "js.snd.on": "Son activé",
+  "js.subj.join": "Rejoindre l'équipe",
+  "js.subj.partner": "Partenariat",
+  "js.subj.question": "Question",
+  "js.summit": "4 120",
+  "js.tick": "Propulsion liquide|Éthanol / GOX|Injecteur coaxial|Chambre en cuivre|Film de refroidissement|Tuyère|Banc d'essai|Séquenceur de mise à feu|Fusées expérimentales|Avionique|Double déploiement|Essais au sol|Vol à ergols liquides"
+ }
+};
+  var L = (document.documentElement.lang || 'en').slice(0, 2);
+  if (!S[L]) L = 'en';
+  var DEC = { en: '.', fr: ',', de: ',' }, THO = { en: ',', fr: '\u00a0', de: '.' };
+  var H = window.HD = window.HD || {};
+  H.lang = L;
+  H.t = function (k) { var d = S[L]; return d && d[k] != null ? d[k] : (S.en[k] != null ? S.en[k] : k); };
+  H.num = function (v, d) {
+    var p = Math.abs(v).toFixed(d == null ? 0 : d).split('.');
+    p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, THO[L]);
+    return (v < 0 ? '\u2212' : '') + p.join(DEC[L]);
+  };
+})();

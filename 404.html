@@ -1,23 +1,24 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Page introuvable — Helvetic Dynamics</title>
+<title>Page not found — Helvetic Dynamics</title>
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/png" href="/assets/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Hanken+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="/style.css">
-<style>.lost{min-height:100svh;display:grid;align-content:center;gap:24px;padding-block:80px}.lost h1{font:800 clamp(4rem,20vw,15rem)/.82 var(--f-display);font-stretch:125%;letter-spacing:-.045em}.lost h1 small{font-size:.26em;letter-spacing:0;margin-left:.12em}</style>
+<style>.lost__links{display:flex;flex-wrap:wrap;align-items:center;gap:18px}.lost__links .lang a{padding:9px 11px;font:500 .7rem/1 var(--f-mono);letter-spacing:.12em;text-decoration:none;opacity:.5}.lost__links .lang a+a{border-left:1px solid var(--rule-d)}.lost__links .lang a[aria-current]{opacity:1;background:rgba(242,242,240,.12)}.lost{min-height:100svh;display:grid;align-content:center;gap:24px;padding-block:80px}.lost h1{font:800 clamp(4rem,20vw,15rem)/.82 var(--f-display);font-stretch:125%;letter-spacing:-.045em}.lost h1 small{font-size:.26em;letter-spacing:0;margin-left:.12em}</style>
 </head>
 <body>
 <main class="wrap lost">
-  <p class="label">Erreur 404</p>
+  <p class="label">Error 404</p>
   <h1>404<small>m</small></h1>
-  <p class="lead">Cette page n'existe pas. Vous êtes au point de départ, à 404 mètres d'altitude : l'ascension recommence depuis l'accueil.</p>
-  <div><a class="btn btn--solid" href="/">Retour à l'accueil</a></div>
+  <p class="lead">This page does not exist. You are back at the starting point, 404 metres above sea level: the ascent begins again from the home page.</p>
+  <div class="lost__links"><a class="btn btn--solid" href="/">Back to the home page</a>
+  <span class="lang" role="group" aria-label="Language"><a href="/" hreflang="en" lang="en" aria-current="true">EN</a><a href="/fr.html" hreflang="fr" lang="fr">FR</a><a href="/de.html" hreflang="de" lang="de">DE</a></span></div>
 </main>
 </body>
 </html>

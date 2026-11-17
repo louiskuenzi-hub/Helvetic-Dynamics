@@ -6,6 +6,7 @@
   if (!canvas || !window.HD) return;
   var ctx = canvas.getContext('2d');
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var TXT = function (k) { return window.HD && window.HD.t ? window.HD.t(k) : k; };
   var G = 1.2, SEP = 0.37, E_MAX = 30;
 
   /* ---------- physique ---------- */
@@ -29,7 +30,7 @@
   /* ---------- commandes ---------- */
   var $ = function (id) { return document.getElementById(id); };
   var iAlt = $('lab-alt'), iPc = $('lab-pc'), iE = $('lab-e'), fit = $('lab-fit'), state = $('lab-state');
-  function fr(n, d) { return n.toFixed(d).replace('.', ','); }
+  function fr(n, d) { return window.HD && window.HD.num ? window.HD.num(n, d) : n.toFixed(d); }
   function altKm() { var v = +iAlt.value / 100; return 100 * v * v; }
   function eVal() { return 1.5 * Math.pow(E_MAX / 1.5, +iE.value / 100); }
   function eToSlider(e) { return 100 * Math.log(e / 1.5) / Math.log(E_MAX / 1.5); }
@@ -41,12 +42,7 @@
     if (pa >= 1) return fr(pa, 1) + ' Pa';
     return fr(pa, 2) + ' Pa';
   }
-  var TXT = {
-    sep: ['Jet décollé', "L'air ambiant est si dense qu'il repousse le jet à l'intérieur de la tuyère. Le divergent ne sert plus à rien et le jet devient instable."],
-    over: ['Sur-détendue', "Les gaz sortent à une pression plus basse que l'air qui les entoure. L'atmosphère pince le jet et la poussée baisse."],
-    fit: ['Adaptée', "Les gaz sortent à la pression de l'air ambiant. Le jet reste droit et la tuyère donne tout ce qu'elle peut."],
-    under: ['Sous-détendue', "Les gaz sortent encore sous pression et finissent de se détendre dehors. Une tuyère plus longue aurait récupéré cette poussée."]
-  };
+  var REG = { sep: 'js.lab.sep', over: 'js.lab.over', fit: 'js.lab.fit', under: 'js.lab.under' };
   var cur = null, S = null, lastRegime = '';
   function read() {
     var k = altKm(), pc = +iPc.value, e = eVal();
@@ -59,10 +55,10 @@
     $('lab-pa').textContent = fmtP(S.pa);
     $('lab-cf').textContent = fr(S.cf, 2);
     $('lab-eff').textContent = fr(Math.min(100, S.eff * 100), 1) + ' %';
-    $('lab-ead').textContent = S.eAd > 1000 ? 'plus de 1 000' : fr(S.eAd, S.eAd < 10 ? 1 : 0);
+    $('lab-ead').textContent = S.eAd > 1000 ? TXT('js.lab.over1k') : fr(S.eAd, S.eAd < 10 ? 1 : 0);
     fit.disabled = Math.abs(Math.min(E_MAX, Math.max(1.5, S.eAd)) - e) < 0.06;
-    fit.firstChild.nodeValue = S.eAd > E_MAX ? 'Ouvrir la tuyère au maximum' : 'Adapter la tuyère à cette altitude';
-    if (S.regime !== lastRegime) { lastRegime = S.regime; state.dataset.r = S.regime; state.innerHTML = '<b>' + TXT[S.regime][0] + '</b><span>' + TXT[S.regime][1] + '</span>'; }
+    fit.textContent = TXT(S.eAd > E_MAX ? 'js.lab.maxbtn' : 'js.lab.fitbtn');
+    if (S.regime !== lastRegime) { lastRegime = S.regime; state.dataset.r = S.regime; state.innerHTML = '<b>' + TXT(REG[S.regime]) + '</b><span>' + TXT(REG[S.regime] + 'd') + '</span>'; }
     kick();
   }
 
@@ -165,8 +161,8 @@
       ctx.strokeStyle = 'rgba(160,162,168,.6)'; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke(); ctx.setLineDash([]);
       ctx.fillStyle = '#f2f2f0'; ctx.fillText(text, x, y1 + (down ? 13 : -5));
     }
-    tag('COL, M = 1', Math.max(60, g.xt), g.rt, true, Math.max(g.rc, g.re * 0.5) + th + 3);
-    tag('SORTIE, M = ' + fr(S.Me, 1), g.xe - 2, g.re, false, g.re + th + 3);
+    tag(TXT('js.lab.throat'), Math.max(60, g.xt), g.rt, true, Math.max(g.rc, g.re * 0.5) + th + 3);
+    tag(TXT('js.lab.exit') + fr(S.Me, 1), g.xe - 2, g.re, false, g.re + th + 3);
   }
 
   /* ---------- boucle : n'anime que si la figure est à l'écran ---------- */
